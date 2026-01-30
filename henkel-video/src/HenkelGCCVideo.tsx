@@ -7,6 +7,7 @@ import { CountriesScene } from "./scenes/CountriesScene";
 import { PlotTwistScene } from "./scenes/PlotTwistScene";
 import { TeamRevealScene } from "./scenes/TeamRevealScene";
 import { ClosingScene } from "./scenes/ClosingScene";
+import { COLORS } from "./config";
 
 // Scene timing configuration (in frames at 30fps)
 const SCENES = {
@@ -16,16 +17,17 @@ const SCENES = {
   countries: { start: 405, duration: 180 },     // 13.5-19.5s: Country breakdown
   plotTwist: { start: 570, duration: 180 },     // 19-25s: "Zero" reveal
   teamReveal: { start: 735, duration: 270 },    // 24.5-33.5s: Team members
-  closing: { start: 990, duration: 260 },       // 33-42s: Closing message
+  closing: { start: 990, duration: 280 },       // 33-42.3s: Closing message
 };
 
-// Crossfade transition component
+// Enhanced crossfade transition with scale effect
 const CrossfadeTransition: React.FC<{
   children: React.ReactNode;
   duration: number;
   fadeInDuration?: number;
   fadeOutDuration?: number;
-}> = ({ children, duration, fadeInDuration = 15, fadeOutDuration = 15 }) => {
+  scaleEffect?: boolean;
+}> = ({ children, duration, fadeInDuration = 15, fadeOutDuration = 15, scaleEffect = false }) => {
   const frame = useCurrentFrame();
 
   // Ensure minimum duration of 1 to avoid [0,0] range
@@ -49,39 +51,79 @@ const CrossfadeTransition: React.FC<{
 
   const opacity = Math.min(fadeIn, fadeOut);
 
+  // Optional scale effect for more dynamic transitions
+  const scaleIn = scaleEffect ? interpolate(frame, [0, safeInDuration], [0.95, 1], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  }) : 1;
+
+  const scaleOut = scaleEffect ? interpolate(
+    frame,
+    [duration - safeOutDuration, duration],
+    [1, 1.02],
+    {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    }
+  ) : 1;
+
+  const scale = frame < duration / 2 ? scaleIn : scaleOut;
+
   return (
-    <AbsoluteFill style={{ opacity }}>
+    <AbsoluteFill
+      style={{
+        opacity,
+        transform: `scale(${scale})`,
+      }}
+    >
       {children}
     </AbsoluteFill>
   );
 };
 
-// Final fade component
+// Final fade component with Henkel red tint
 const FinalFade: React.FC = () => {
   const frame = useCurrentFrame();
-  const opacity = interpolate(frame, [0, 30], [0, 1], {
+
+  // Fade to black with subtle red tint
+  const opacity = interpolate(frame, [0, 45], [0, 1], {
+    extrapolateRight: "clamp",
+  });
+
+  const redOpacity = interpolate(frame, [0, 20, 45], [0, 0.15, 0], {
     extrapolateRight: "clamp",
   });
 
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: "#0A0A0A",
-        opacity,
-      }}
-    />
+    <>
+      {/* Red tint flash before fade */}
+      <AbsoluteFill
+        style={{
+          backgroundColor: COLORS.henkelRed,
+          opacity: redOpacity,
+        }}
+      />
+      {/* Main fade to black */}
+      <AbsoluteFill
+        style={{
+          backgroundColor: COLORS.darkBg,
+          opacity,
+        }}
+      />
+    </>
   );
 };
 
 export const HenkelGCCVideo: React.FC = () => {
   return (
-    <AbsoluteFill style={{ backgroundColor: "#0A0A0A" }}>
+    <AbsoluteFill style={{ backgroundColor: COLORS.darkBg }}>
       {/* Scene 1: Intro with flags */}
       <Sequence from={SCENES.intro.start} durationInFrames={SCENES.intro.duration}>
         <CrossfadeTransition
           duration={SCENES.intro.duration}
           fadeInDuration={1}
-          fadeOutDuration={15}
+          fadeOutDuration={20}
+          scaleEffect
         >
           <IntroScene />
         </CrossfadeTransition>
@@ -89,14 +131,21 @@ export const HenkelGCCVideo: React.FC = () => {
 
       {/* Scene 2: Logo Reveal */}
       <Sequence from={SCENES.logoReveal.start} durationInFrames={SCENES.logoReveal.duration}>
-        <CrossfadeTransition duration={SCENES.logoReveal.duration}>
+        <CrossfadeTransition
+          duration={SCENES.logoReveal.duration}
+          fadeInDuration={20}
+          fadeOutDuration={15}
+        >
           <LogoRevealScene />
         </CrossfadeTransition>
       </Sequence>
 
       {/* Scene 3: Stats */}
       <Sequence from={SCENES.stats.start} durationInFrames={SCENES.stats.duration}>
-        <CrossfadeTransition duration={SCENES.stats.duration}>
+        <CrossfadeTransition
+          duration={SCENES.stats.duration}
+          scaleEffect
+        >
           <StatsScene />
         </CrossfadeTransition>
       </Sequence>
@@ -110,14 +159,22 @@ export const HenkelGCCVideo: React.FC = () => {
 
       {/* Scene 5: Plot Twist - Zero */}
       <Sequence from={SCENES.plotTwist.start} durationInFrames={SCENES.plotTwist.duration}>
-        <CrossfadeTransition duration={SCENES.plotTwist.duration}>
+        <CrossfadeTransition
+          duration={SCENES.plotTwist.duration}
+          fadeInDuration={10}
+          fadeOutDuration={20}
+        >
           <PlotTwistScene />
         </CrossfadeTransition>
       </Sequence>
 
       {/* Scene 6: Team Reveal */}
       <Sequence from={SCENES.teamReveal.start} durationInFrames={SCENES.teamReveal.duration}>
-        <CrossfadeTransition duration={SCENES.teamReveal.duration}>
+        <CrossfadeTransition
+          duration={SCENES.teamReveal.duration}
+          fadeInDuration={20}
+          fadeOutDuration={15}
+        >
           <TeamRevealScene />
         </CrossfadeTransition>
       </Sequence>
@@ -126,14 +183,15 @@ export const HenkelGCCVideo: React.FC = () => {
       <Sequence from={SCENES.closing.start} durationInFrames={SCENES.closing.duration}>
         <CrossfadeTransition
           duration={SCENES.closing.duration}
-          fadeOutDuration={30}
+          fadeInDuration={15}
+          fadeOutDuration={0}
         >
           <ClosingScene />
         </CrossfadeTransition>
       </Sequence>
 
-      {/* Final fade to black */}
-      <Sequence from={2220} durationInFrames={30}>
+      {/* Final fade to black with red tint */}
+      <Sequence from={2240} durationInFrames={60}>
         <FinalFade />
       </Sequence>
     </AbsoluteFill>
