@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Henkel GCC Video Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            color: #ffffff;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #ffffff, #E2001A);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.6);
+            font-size: 1.1rem;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(226, 0, 26, 0.2), 0 0 0 1px rgba(255,255,255,0.1);
+        }
+
+        video {
+            width: 100%;
+            display: block;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .version-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.9rem;
+        }
+
+        .version-badge {
+            background: rgba(226, 0, 26, 0.2);
+            color: #E2001A;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: rgba(226, 0, 26, 0.3);
+            border-color: #E2001A;
+        }
+
+        .loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.8);
+            font-size: 1.2rem;
+        }
+
+        .loading.hidden {
+            display: none;
+        }
+
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: #E2001A;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Henkel GCC Video</h1>
+            <p class="subtitle">Built with Remotion - React-powered video generation</p>
+        </header>
+
+        <div class="video-container">
+            <div class="loading" id="loading">Loading video...</div>
+            <video id="video" controls preload="metadata">
+                <source src="" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+
+        <div class="info-bar">
+            <div class="version-info">
+                <span>Version:</span>
+                <span class="version-badge" id="version">Loading...</span>
+                <span id="timestamp"></span>
+            </div>
+            <div class="controls">
+                <button onclick="forceRefresh()">Force Refresh</button>
+                <button onclick="downloadVideo()">Download MP4</button>
+            </div>
+        </div>
+
+        <footer>
+            <p>Auto-refreshing video preview | <a href="https://github.com/3wdyy/hadeel">View Repository</a></p>
+        </footer>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const loading = document.getElementById('loading');
+        const versionBadge = document.getElementById('version');
+        const timestampSpan = document.getElementById('timestamp');
+
+        async function loadVideo() {
+            try {
+                // Fetch version file with cache-busting
+                const versionResponse = await fetch('./video-version.txt?_=' + Date.now());
+                const versionData = await versionResponse.text();
+                const [version, timestamp] = versionData.trim().split('\n');
+
+                // Update UI
+                versionBadge.textContent = version || 'v1';
+                if (timestamp) {
+                    const date = new Date(timestamp);
+                    timestampSpan.textContent = '| Rendered: ' + date.toLocaleString();
+                }
+
+                // Set video source with version for cache-busting
+                video.querySelector('source').src = './henkel-gcc.mp4?v=' + (version || Date.now());
+                video.load();
+
+            } catch (error) {
+                console.warn('Could not load version file, using fallback');
+                // Fallback: use timestamp for cache-busting
+                video.querySelector('source').src = './henkel-gcc.mp4?v=' + Date.now();
+                video.load();
+                versionBadge.textContent = 'latest';
+            }
+        }
+
+        video.addEventListener('loadeddata', () => {
+            loading.classList.add('hidden');
+        });
+
+        video.addEventListener('error', () => {
+            loading.textContent = 'Error loading video. Please try refreshing.';
+        });
+
+        function forceRefresh() {
+            loading.classList.remove('hidden');
+            loading.textContent = 'Refreshing...';
+            video.querySelector('source').src = './henkel-gcc.mp4?v=' + Date.now();
+            video.load();
+        }
+
+        function downloadVideo() {
+            const a = document.createElement('a');
+            a.href = './henkel-gcc.mp4';
+            a.download = 'henkel-gcc.mp4';
+            a.click();
+        }
+
+        // Initial load
+        loadVideo();
+    </script>
+</body>
+</html>
