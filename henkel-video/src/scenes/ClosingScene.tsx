@@ -1,98 +1,12 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame, spring, useVideoConfig, interpolate } from "remotion";
 import { Background } from "../components/Background";
-import { SplitText, SplitWords } from "../components/SplitText";
+import { SplitWords } from "../components/SplitText";
 import { Flash, LightStreak, CircularReveal } from "../components/Effects";
 import { FONTS, COLORS, SPRING_CONFIGS } from "../config";
 
-// Converging flag with trail effect
-const ConvergingFlag: React.FC<{
-  flag: string;
-  index: number;
-  total: number;
-  delay: number;
-}> = ({ flag, index, total, delay }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const adjustedFrame = Math.max(0, frame - delay);
-
-  const progress = spring({
-    frame: adjustedFrame,
-    fps,
-    config: { damping: 15, stiffness: 60, mass: 1.2 },
-  });
-
-  // Calculate starting position - flags come from different directions
-  const angle = (index / total) * Math.PI * 2 - Math.PI / 2;
-  const distance = 500;
-  const startX = Math.cos(angle) * distance;
-  const startY = Math.sin(angle) * distance;
-
-  // Final position forms a horizontal row
-  const finalX = (index - (total - 1) / 2) * 80;
-  const finalY = 0;
-
-  const x = interpolate(progress, [0, 1], [startX, finalX]);
-  const y = interpolate(progress, [0, 1], [startY, finalY]);
-
-  // Rotation and scale
-  const rotation = interpolate(progress, [0, 0.7, 1], [360 + index * 30, -10, 0]);
-  const scale = interpolate(progress, [0, 0.6, 0.9, 1], [0.3, 1.2, 0.95, 1]);
-
-  // Trail effect - fading copies behind
-  const trailCount = 5;
-
-  return (
-    <>
-      {/* Motion trails */}
-      {Array.from({ length: trailCount }).map((_, trailIndex) => {
-        const trailProgress = Math.max(0, progress - trailIndex * 0.08);
-        const trailX = interpolate(trailProgress, [0, 1], [startX, finalX]);
-        const trailY = interpolate(trailProgress, [0, 1], [startY, finalY]);
-
-        return (
-          <div
-            key={trailIndex}
-            style={{
-              position: "absolute",
-              fontSize: 50,
-              transform: `translate(${trailX}px, ${trailY}px) scale(${scale * 0.9})`,
-              opacity: (progress < 0.8 ? 0.15 : 0) * (1 - trailIndex / trailCount),
-              filter: `blur(${3 + trailIndex * 2}px)`,
-            }}
-          >
-            {flag}
-          </div>
-        );
-      })}
-
-      {/* Main flag */}
-      <div
-        style={{
-          position: "absolute",
-          fontSize: 50,
-          transform: `
-            translate(${x}px, ${y}px)
-            rotate(${rotation}deg)
-            scale(${scale})
-          `,
-          opacity: progress,
-          filter: `drop-shadow(0 5px 15px rgba(0,0,0,0.5))`,
-        }}
-      >
-        {flag}
-      </div>
-    </>
-  );
-};
-
-// Stat convergence element
-const ConvergingStat: React.FC<{
-  value: number;
-  label: string;
-  index: number;
-  delay: number;
-}> = ({ value, label, index, delay }) => {
+// World map with all pins
+const WorldMapWithConnections: React.FC<{ delay: number }> = ({ delay }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const adjustedFrame = Math.max(0, frame - delay);
@@ -103,49 +17,274 @@ const ConvergingStat: React.FC<{
     config: SPRING_CONFIGS.smooth,
   });
 
-  // Position based on index
-  const xOffset = (index - 1) * 180;
+  // Line connection animation (starts after map appears)
+  const lineProgress = spring({
+    frame: Math.max(0, adjustedFrame - 60),
+    fps,
+    config: { damping: 30, stiffness: 40, mass: 1 },
+  });
 
-  // Counter animation
-  const displayValue = Math.round(interpolate(progress, [0, 0.7, 1], [0, value * 1.2, value]));
+  const countries = [
+    { flag: "🇷🇺", name: "Russia", x: 70, y: 25 },
+    { flag: "🇪🇬", name: "Egypt", x: 55, y: 55 },
+    { flag: "🇫🇷", name: "France", x: 48, y: 35 },
+    { flag: "🇱🇰", name: "Sri Lanka", x: 75, y: 65 },
+    { flag: "🇩🇪", name: "Germany", x: 52, y: 32 },
+  ];
+
+  const gccCenter = { x: 60, y: 50 };
 
   return (
     <div
       style={{
-        textAlign: "center",
+        position: "relative",
+        width: 900,
+        height: 500,
         opacity: progress,
-        transform: `
-          translateY(${interpolate(progress, [0, 1], [40, 0])}px)
-          translateX(${xOffset}px)
-          scale(${interpolate(progress, [0, 0.8, 1], [0.8, 1.05, 1])})
-        `,
+        transform: `scale(${interpolate(progress, [0, 1], [0.9, 1])})`,
       }}
     >
+      {/* Map background */}
       <div
         style={{
-          fontSize: 72,
-          fontWeight: 900,
-          color: COLORS.white,
-          fontFamily: FONTS.heading,
-          textShadow: `0 0 30px ${COLORS.henkelRed}60`,
-          lineHeight: 1,
+          position: "absolute",
+          inset: 0,
+          background: COLORS.darkBgAlt,
+          borderRadius: 30,
+          border: `1px solid ${COLORS.whiteAlpha10}`,
+          overflow: "hidden",
         }}
       >
-        {displayValue}
+        {/* Grid effect */}
+        <svg viewBox="0 0 900 500" style={{ position: "absolute", inset: 0, opacity: 0.1 }}>
+          {Array.from({ length: 20 }).map((_, i) => (
+            <line key={`h-${i}`} x1="0" y1={i * 25} x2="900" y2={i * 25} stroke={COLORS.white} strokeWidth="1" />
+          ))}
+          {Array.from({ length: 36 }).map((_, i) => (
+            <line key={`v-${i}`} x1={i * 25} y1="0" x2={i * 25} y2="500" stroke={COLORS.white} strokeWidth="1" />
+          ))}
+        </svg>
       </div>
+
+      {/* Connection lines */}
+      <svg viewBox="0 0 100 100" style={{ position: "absolute", inset: 0 }}>
+        {countries.map((country, index) => {
+          const lineLength = lineProgress * 100;
+          const dx = gccCenter.x - country.x;
+          const dy = gccCenter.y - country.y;
+          const length = Math.sqrt(dx * dx + dy * dy);
+          const endX = country.x + (dx / length) * Math.min(lineLength, length);
+          const endY = country.y + (dy / length) * Math.min(lineLength, length);
+
+          return (
+            <line
+              key={index}
+              x1={`${country.x}%`}
+              y1={`${country.y}%`}
+              x2={`${endX}%`}
+              y2={`${endY}%`}
+              stroke={COLORS.henkelRed}
+              strokeWidth="0.5"
+              strokeDasharray="2,2"
+              opacity={lineProgress * 0.8}
+            />
+          );
+        })}
+      </svg>
+
+      {/* Country pins */}
+      {countries.map((country, index) => {
+        const pinProgress = spring({
+          frame: Math.max(0, adjustedFrame - 20 - index * 10),
+          fps,
+          config: SPRING_CONFIGS.bouncy,
+        });
+
+        return (
+          <div
+            key={index}
+            style={{
+              position: "absolute",
+              left: `${country.x}%`,
+              top: `${country.y}%`,
+              transform: `translate(-50%, -50%) scale(${interpolate(pinProgress, [0, 0.8, 1], [0, 1.2, 1])})`,
+              opacity: pinProgress,
+            }}
+          >
+            <div style={{ fontSize: 40, filter: "drop-shadow(0 3px 10px rgba(0,0,0,0.5))" }}>
+              {country.flag}
+            </div>
+          </div>
+        );
+      })}
+
+      {/* GCC center */}
       <div
         style={{
-          fontSize: 16,
-          fontWeight: 500,
-          color: COLORS.whiteAlpha60,
-          fontFamily: FONTS.accent,
-          textTransform: "uppercase",
-          letterSpacing: "0.2em",
-          marginTop: 8,
+          position: "absolute",
+          left: `${gccCenter.x}%`,
+          top: `${gccCenter.y}%`,
+          transform: "translate(-50%, -50%)",
         }}
       >
-        {label}
+        <div
+          style={{
+            width: 80,
+            height: 80,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, ${COLORS.henkelRed} 0%, ${COLORS.henkelRedDark} 100%)`,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            boxShadow: `0 0 30px ${COLORS.henkelRed}80, 0 0 60px ${COLORS.henkelRed}40`,
+            opacity: lineProgress,
+            transform: `scale(${interpolate(lineProgress, [0, 0.5, 1], [0.5, 1.1, 1])})`,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 20,
+              fontWeight: 900,
+              color: COLORS.white,
+              fontFamily: FONTS.heading,
+            }}
+          >
+            GCC
+          </span>
+        </div>
       </div>
+    </div>
+  );
+};
+
+// Team grid
+const TeamGrid: React.FC<{ delay: number }> = ({ delay }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const adjustedFrame = Math.max(0, frame - delay);
+
+  const members = [
+    { name: "IRINA", flag: "🇷🇺" },
+    { name: "MOHAMED", flag: "🇪🇬" },
+    { name: "NICOLAS", flag: "🇫🇷" },
+    { name: "JUDE", flag: "🇱🇰" },
+    { name: "HANY", flag: "🇪🇬" },
+    { name: "WAEL", flag: "🇪🇬" },
+  ];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        gap: 30,
+        flexWrap: "wrap",
+        maxWidth: 800,
+      }}
+    >
+      {members.map((member, index) => {
+        const progress = spring({
+          frame: Math.max(0, adjustedFrame - index * 8),
+          fps,
+          config: SPRING_CONFIGS.bouncy,
+        });
+
+        return (
+          <div
+            key={index}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 10,
+              padding: "20px 30px",
+              background: COLORS.darkBgAlt,
+              borderRadius: 15,
+              border: `1px solid ${COLORS.whiteAlpha10}`,
+              opacity: progress,
+              transform: `translateY(${interpolate(progress, [0, 1], [30, 0])}px) scale(${interpolate(progress, [0, 0.8, 1], [0.8, 1.05, 1])})`,
+            }}
+          >
+            <div style={{ fontSize: 50 }}>{member.flag}</div>
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 700,
+                color: COLORS.white,
+                fontFamily: FONTS.heading,
+              }}
+            >
+              {member.name}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Building stats
+const BuildingStats: React.FC<{ delay: number }> = ({ delay }) => {
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+  const adjustedFrame = Math.max(0, frame - delay);
+
+  const stats = [
+    { value: 5, label: "Countries" },
+    { value: 6, label: "People" },
+    { value: 1, label: "GCC Team" },
+  ];
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        gap: 80,
+        justifyContent: "center",
+      }}
+    >
+      {stats.map((stat, index) => {
+        const progress = spring({
+          frame: Math.max(0, adjustedFrame - index * 30),
+          fps,
+          config: SPRING_CONFIGS.bouncy,
+        });
+
+        return (
+          <div
+            key={index}
+            style={{
+              textAlign: "center",
+              opacity: progress,
+              transform: `translateY(${interpolate(progress, [0, 1], [40, 0])}px)`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 100,
+                fontWeight: 900,
+                color: index === 2 ? COLORS.henkelRed : COLORS.white,
+                fontFamily: FONTS.heading,
+                textShadow: index === 2 ? `0 0 40px ${COLORS.henkelRed}80` : "none",
+              }}
+            >
+              {Math.round(interpolate(progress, [0, 1], [0, stat.value]))}
+            </div>
+            <div
+              style={{
+                fontSize: 24,
+                fontWeight: 500,
+                color: COLORS.whiteAlpha60,
+                fontFamily: FONTS.accent,
+                textTransform: "uppercase",
+                letterSpacing: "0.15em",
+              }}
+            >
+              {stat.label}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -154,76 +293,69 @@ export const ClosingScene: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const flags = ["🇷🇺", "🇪🇬", "🇫🇷", "🇱🇰", "🇩🇪"];
+  // Scene duration: 75 seconds = 2250 frames
+  // Sub-scene timing:
+  // 0-240: World map with pins (8 sec)
+  // 240-450: Animated connections (7 sec)
+  // 450-630: Team grid (6 sec)
+  // 630-900: Building stats (9 sec - 3 sec each)
+  // 900-1050: "Different roots. One mission." (5 sec)
+  // 1050-1170: Elevate MENAT (4 sec)
+  // 1170-1320: Henkel logo (5 sec)
+  // 1320-1410: Hold + fade (3 sec)
 
-  // Phase timings
-  const statsDelay = 0;
-  const flagsDelay = 40;
-  const messageDelay = 100;
-  const missionDelay = 140;
-  const elevateDelay = 180;
-  const menatDelay = 210;
-  const logoDelay = 250;
+  const currentPhase =
+    frame < 450 ? "map" :
+    frame < 630 ? "team" :
+    frame < 900 ? "stats" :
+    frame < 1050 ? "tagline" :
+    frame < 1170 ? "elevate" :
+    "logo";
 
   // Animation progress values
-  const messageProgress = spring({
-    frame: Math.max(0, frame - messageDelay),
+  const taglineProgress = spring({
+    frame: Math.max(0, frame - 900),
     fps,
     config: SPRING_CONFIGS.smooth,
   });
 
   const missionProgress = spring({
-    frame: Math.max(0, frame - missionDelay),
+    frame: Math.max(0, frame - 960),
     fps,
     config: SPRING_CONFIGS.dramatic,
   });
 
   const elevateProgress = spring({
-    frame: Math.max(0, frame - elevateDelay),
+    frame: Math.max(0, frame - 1050),
     fps,
     config: SPRING_CONFIGS.smooth,
   });
 
   const menatProgress = spring({
-    frame: Math.max(0, frame - menatDelay),
+    frame: Math.max(0, frame - 1080),
     fps,
     config: { damping: 8, stiffness: 40, mass: 1.5 },
   });
 
   const logoProgress = spring({
-    frame: Math.max(0, frame - logoDelay),
+    frame: Math.max(0, frame - 1170),
     fps,
     config: SPRING_CONFIGS.slow,
   });
 
-  // Pulsing heartbeat glow for finale
-  const heartbeat = frame > menatDelay + 30 ?
-    0.4 + Math.sin((frame - menatDelay) * 0.15) * 0.3 +
-    Math.sin((frame - menatDelay) * 0.08) * 0.2 : 0;
-
-  // MENAT letter spacing animation
-  const letterSpacing = interpolate(menatProgress, [0, 0.5, 1], [0.5, 0.15, 0.12]);
-
-  // Subtle screen pulse on MENAT reveal
-  const screenPulse = frame > menatDelay && frame < menatDelay + 15 ?
-    1 + Math.sin((frame - menatDelay) * 0.5) * 0.01 : 1;
+  // Heartbeat glow
+  const heartbeat = frame > 1100 ?
+    0.4 + Math.sin((frame - 1100) * 0.15) * 0.3 +
+    Math.sin((frame - 1100) * 0.08) * 0.2 : 0;
 
   return (
-    <AbsoluteFill
-      style={{
-        transform: `scale(${screenPulse})`,
-      }}
-    >
-      <Background variant="henkel" intensity={1.4} />
+    <AbsoluteFill>
+      <Background variant="henkel" intensity={1.3} />
 
-      {/* Light streak at flag convergence */}
-      <LightStreak trigger={flagsDelay + 30} duration={50} color={COLORS.henkelRedLight} />
-
-      {/* Flash on MENAT reveal */}
-      <Flash trigger={menatDelay + 5} color={COLORS.henkelRed} duration={10} />
-
-      {/* Circular reveal on MENAT */}
-      <CircularReveal trigger={menatDelay} duration={40} color={COLORS.henkelRed} />
+      <Flash trigger={630} color={COLORS.henkelRed} duration={5} />
+      <Flash trigger={1080} color={COLORS.henkelRed} duration={10} />
+      <LightStreak trigger={450} duration={40} color={COLORS.henkelRedLight} />
+      <CircularReveal trigger={1080} duration={40} color={COLORS.henkelRed} />
 
       <AbsoluteFill
         style={{
@@ -234,215 +366,190 @@ export const ClosingScene: React.FC = () => {
           padding: 60,
         }}
       >
-        {/* Stats Row */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            marginBottom: 40,
-            position: "relative",
-          }}
-        >
-          <ConvergingStat value={5} label="Countries" index={0} delay={statsDelay} />
-          <ConvergingStat value={6} label="People" index={1} delay={statsDelay + 10} />
-          <ConvergingStat value={1} label="GCC Team" index={2} delay={statsDelay + 20} />
-        </div>
+        {/* Phase 1: World map with connections */}
+        {currentPhase === "map" && <WorldMapWithConnections delay={0} />}
 
-        {/* Converging Flags */}
-        <div
-          style={{
-            position: "relative",
-            height: 80,
-            width: 500,
-            marginBottom: 50,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {flags.map((flag, index) => (
-            <ConvergingFlag
-              key={index}
-              flag={flag}
-              index={index}
-              total={flags.length}
-              delay={flagsDelay + index * 5}
-            />
-          ))}
-        </div>
+        {/* Phase 2: Team grid */}
+        {currentPhase === "team" && <TeamGrid delay={450} />}
 
-        {/* "Different roots. One mission." */}
-        <div
-          style={{
-            textAlign: "center",
-            marginBottom: 40,
-          }}
-        >
-          <div
-            style={{
-              opacity: messageProgress,
-              transform: `translateY(${interpolate(messageProgress, [0, 1], [30, 0])}px)`,
-            }}
-          >
-            <SplitWords
-              text="Different roots."
-              delay={messageDelay}
-              staggerDelay={8}
-              fontSize={48}
-              fontWeight={500}
-              color={COLORS.white}
-            />
+        {/* Phase 3: Building stats */}
+        {currentPhase === "stats" && <BuildingStats delay={630} />}
+
+        {/* Phase 4: Tagline */}
+        {currentPhase === "tagline" && (
+          <div style={{ textAlign: "center" }}>
+            <div
+              style={{
+                fontSize: 64,
+                fontWeight: 600,
+                color: COLORS.white,
+                fontFamily: FONTS.heading,
+                marginBottom: 20,
+                opacity: taglineProgress,
+                transform: `translateY(${interpolate(taglineProgress, [0, 1], [30, 0])}px)`,
+              }}
+            >
+              Different roots.
+            </div>
+
+            <div
+              style={{
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  inset: -40,
+                  background: `radial-gradient(ellipse, ${COLORS.henkelRed}40 0%, transparent 70%)`,
+                  opacity: missionProgress,
+                  filter: "blur(25px)",
+                }}
+              />
+
+              <div
+                style={{
+                  fontSize: 72,
+                  fontWeight: 900,
+                  color: COLORS.henkelRed,
+                  fontFamily: FONTS.heading,
+                  opacity: missionProgress,
+                  transform: `scale(${interpolate(missionProgress, [0, 0.5, 1], [0.9, 1.05, 1])})`,
+                  textShadow: `
+                    0 0 40px ${COLORS.henkelRed}80,
+                    0 0 80px ${COLORS.henkelRed}40
+                  `,
+                  position: "relative",
+                }}
+              >
+                One mission.
+              </div>
+            </div>
           </div>
+        )}
 
+        {/* Phase 5: Elevate MENAT */}
+        {currentPhase === "elevate" && (
           <div
             style={{
-              marginTop: 10,
               position: "relative",
+              textAlign: "center",
             }}
           >
-            {/* Glow behind "One mission" */}
+            {/* Massive glow */}
             <div
               style={{
                 position: "absolute",
-                inset: -30,
-                background: `radial-gradient(ellipse, ${COLORS.henkelRed}40 0%, transparent 70%)`,
-                opacity: missionProgress,
-                filter: "blur(20px)",
+                inset: -200,
+                background: `radial-gradient(ellipse, ${COLORS.henkelRed}${Math.floor(heartbeat * 80).toString(16).padStart(2, '0')} 0%, transparent 60%)`,
+                filter: "blur(100px)",
+                opacity: menatProgress,
               }}
             />
 
             <div
               style={{
-                fontSize: 52,
-                fontWeight: 800,
-                color: COLORS.henkelRed,
+                fontSize: 36,
+                fontWeight: 400,
+                color: COLORS.whiteAlpha80,
                 fontFamily: FONTS.heading,
-                opacity: missionProgress,
-                transform: `
-                  translateY(${interpolate(missionProgress, [0, 1], [30, 0])}px)
-                  scale(${interpolate(missionProgress, [0, 0.5, 1], [0.9, 1.05, 1])})
-                `,
+                textTransform: "uppercase",
+                letterSpacing: "0.6em",
+                marginBottom: 20,
+                opacity: elevateProgress,
+                transform: `translateY(${interpolate(elevateProgress, [0, 1], [20, 0])}px)`,
+                position: "relative",
+              }}
+            >
+              Elevate
+            </div>
+
+            <div
+              style={{
+                fontSize: 140,
+                fontWeight: 900,
+                color: COLORS.white,
+                fontFamily: FONTS.heading,
+                letterSpacing: "0.1em",
+                opacity: menatProgress,
+                transform: `scale(${interpolate(menatProgress, [0, 0.3, 0.6, 1], [2, 0.95, 1.02, 1])})`,
+                filter: `blur(${interpolate(menatProgress, [0, 0.5, 1], [20, 2, 0])}px)`,
                 textShadow: `
-                  0 0 30px ${COLORS.henkelRed}80,
-                  0 0 60px ${COLORS.henkelRed}40
+                  0 0 ${80 + heartbeat * 60}px ${COLORS.henkelRed},
+                  0 0 ${160 + heartbeat * 100}px ${COLORS.henkelRed}80,
+                  0 0 ${240 + heartbeat * 140}px ${COLORS.henkelRed}40
                 `,
                 position: "relative",
               }}
             >
-              One mission.
+              MENAT
             </div>
           </div>
-        </div>
+        )}
 
-        {/* ELEVATE MENAT - Epic finale */}
-        <div
-          style={{
-            position: "relative",
-            textAlign: "center",
-          }}
-        >
-          {/* Massive background glow */}
+        {/* Phase 6: Henkel Logo */}
+        {currentPhase === "logo" && (
           <div
             style={{
-              position: "absolute",
-              inset: -150,
-              background: `radial-gradient(ellipse, ${COLORS.henkelRed}${Math.floor(heartbeat * 80).toString(16).padStart(2, '0')} 0%, transparent 60%)`,
-              filter: "blur(80px)",
-              opacity: menatProgress,
-            }}
-          />
-
-          {/* Secondary glow ring */}
-          <div
-            style={{
-              position: "absolute",
-              inset: -100,
-              background: `radial-gradient(circle, transparent 30%, ${COLORS.henkelRed}${Math.floor(heartbeat * 40).toString(16).padStart(2, '0')} 50%, transparent 70%)`,
-              filter: "blur(40px)",
-              opacity: menatProgress,
-            }}
-          />
-
-          {/* ELEVATE */}
-          <div
-            style={{
-              fontSize: 32,
-              fontWeight: 400,
-              color: COLORS.whiteAlpha80,
-              fontFamily: FONTS.heading,
-              textTransform: "uppercase",
-              letterSpacing: "0.6em",
-              marginBottom: 15,
-              opacity: elevateProgress,
-              transform: `translateY(${interpolate(elevateProgress, [0, 1], [20, 0])}px)`,
-              position: "relative",
-            }}
-          >
-            Elevate
-          </div>
-
-          {/* MENAT - The hero moment */}
-          <div
-            style={{
-              fontSize: 120,
-              fontWeight: 900,
-              color: COLORS.white,
-              fontFamily: FONTS.heading,
-              letterSpacing: `${letterSpacing}em`,
-              opacity: menatProgress,
-              transform: `
-                scale(${interpolate(menatProgress, [0, 0.3, 0.6, 1], [2, 0.95, 1.02, 1])})
-                translateY(${interpolate(menatProgress, [0, 1], [40, 0])}px)
-              `,
-              filter: `blur(${interpolate(menatProgress, [0, 0.5, 1], [20, 2, 0])}px)`,
-              textShadow: `
-                0 0 ${60 + heartbeat * 40}px ${COLORS.henkelRed},
-                0 0 ${120 + heartbeat * 60}px ${COLORS.henkelRed}80,
-                0 0 ${180 + heartbeat * 80}px ${COLORS.henkelRed}40,
-                0 10px 60px rgba(0,0,0,0.8)
-              `,
-              position: "relative",
-            }}
-          >
-            MENAT
-          </div>
-        </div>
-
-        {/* Henkel GCC footer */}
-        <div
-          style={{
-            position: "absolute",
-            bottom: 50,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 12,
-          }}
-        >
-          {/* Animated line above */}
-          <div
-            style={{
-              width: `${interpolate(logoProgress, [0, 1], [0, 200])}px`,
-              height: 1,
-              background: `linear-gradient(90deg, transparent, ${COLORS.whiteAlpha40}, transparent)`,
-            }}
-          />
-
-          <div
-            style={{
-              fontSize: 22,
-              fontWeight: 600,
-              color: COLORS.whiteAlpha40,
-              fontFamily: FONTS.heading,
-              letterSpacing: "0.4em",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 30,
               opacity: logoProgress,
-              transform: `translateY(${interpolate(logoProgress, [0, 1], [15, 0])}px)`,
+              transform: `scale(${interpolate(logoProgress, [0, 1], [0.9, 1])})`,
             }}
           >
-            HENKEL GCC
+            {/* Henkel oval logo */}
+            <div
+              style={{
+                width: 250,
+                height: 140,
+                border: `5px solid ${COLORS.henkelRed}`,
+                borderRadius: "50%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                boxShadow: `0 0 40px ${COLORS.henkelRed}60, 0 0 80px ${COLORS.henkelRed}30`,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 56,
+                  fontWeight: 900,
+                  color: COLORS.henkelRed,
+                  fontFamily: FONTS.heading,
+                  letterSpacing: "-0.02em",
+                }}
+              >
+                Henkel
+              </span>
+            </div>
+
+            <div
+              style={{
+                fontSize: 28,
+                fontWeight: 600,
+                color: COLORS.whiteAlpha60,
+                fontFamily: FONTS.heading,
+                letterSpacing: "0.4em",
+                textTransform: "uppercase",
+              }}
+            >
+              GCC
+            </div>
           </div>
-        </div>
+        )}
       </AbsoluteFill>
+
+      {/* Final fade */}
+      {frame > 1350 && (
+        <AbsoluteFill
+          style={{
+            background: COLORS.darkBg,
+            opacity: interpolate(frame, [1350, 1410], [0, 1], { extrapolateRight: "clamp" }),
+          }}
+        />
+      )}
     </AbsoluteFill>
   );
 };

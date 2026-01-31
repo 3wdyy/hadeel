@@ -7,7 +7,7 @@ export const RemotionRoot: React.FC = () => {
       <Composition
         id="HenkelGCC"
         component={HenkelGCCVideo}
-        durationInFrames={30 * 75} // 75 seconds at 30fps
+        durationInFrames={30 * 600} // 10 minutes (600 seconds) at 30fps
         fps={30}
         width={1920}
         height={1080}

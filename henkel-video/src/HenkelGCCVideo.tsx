@@ -1,36 +1,172 @@
 import React from "react";
 import { AbsoluteFill, Sequence, useCurrentFrame, interpolate } from "remotion";
-import { IntroScene } from "./scenes/IntroScene";
-import { LogoRevealScene } from "./scenes/LogoRevealScene";
-import { StatsScene } from "./scenes/StatsScene";
-import { CountriesScene } from "./scenes/CountriesScene";
+import { HookScene } from "./scenes/HookScene";
+import { GCCRegionIntroScene } from "./scenes/GCCRegionIntroScene";
 import { PlotTwistScene } from "./scenes/PlotTwistScene";
-import { TeamRevealScene } from "./scenes/TeamRevealScene";
+import { TeamMemberProfileScene, TeamMemberData } from "./scenes/TeamMemberProfileScene";
 import { ClosingScene } from "./scenes/ClosingScene";
 import { COLORS } from "./config";
 
-// Scene timing configuration (in frames at 30fps)
+// 10-minute video timing (in frames at 30fps)
+// Total: 18000 frames = 600 seconds = 10 minutes
+
 const SCENES = {
-  intro: { start: 0, duration: 180 },           // 0-6s: Opening with flags
-  logoReveal: { start: 165, duration: 120 },    // 5.5-9.5s: Henkel GCC reveal
-  stats: { start: 270, duration: 150 },         // 9-14s: 44 years, 60M, 6 countries
-  countries: { start: 405, duration: 180 },     // 13.5-19.5s: Country breakdown
-  plotTwist: { start: 570, duration: 180 },     // 19-25s: "Zero" reveal
-  teamReveal: { start: 735, duration: 270 },    // 24.5-33.5s: Team members
-  closing: { start: 990, duration: 280 },       // 33-42.3s: Closing message
+  // Act 1: The Hook - 0:00 to 0:40 (40 sec)
+  hook: { start: 0, duration: 1200 },
+
+  // Act 2: GCC Region Intro - 0:40 to 2:30 (110 sec)
+  gccIntro: { start: 1200, duration: 3300 },
+
+  // Act 3: The Plot Twist - 2:30 to 3:15 (45 sec)
+  plotTwist: { start: 4500, duration: 1350 },
+
+  // Act 4: Meet the Team - 3:15 to 8:45 (~55 sec each, 6 people = 330 sec total)
+  team: {
+    irina: { start: 5850, duration: 1650 },      // 55 sec
+    mohamed: { start: 7500, duration: 1650 },    // 55 sec
+    nicolas: { start: 9150, duration: 1650 },    // 55 sec
+    jude: { start: 10800, duration: 1650 },      // 55 sec
+    hany: { start: 12450, duration: 1650 },      // 55 sec
+    wael: { start: 14100, duration: 1650 },      // 55 sec
+  },
+
+  // Act 5: Closing - 8:45 to 10:00 (75 sec)
+  closing: { start: 15750, duration: 2250 },
 };
 
-// Enhanced crossfade transition with scale effect
+// Team member data
+const TEAM_MEMBERS: Record<string, TeamMemberData> = {
+  irina: {
+    name: "IRINA",
+    title: "General Manager",
+    country: "Russia",
+    flag: "🇷🇺",
+    yearsAtHenkel: 20,
+    previousRoles: [
+      "Regional Sales Manager - Samara",
+      "Head of Key Accounts Department",
+      "Sales Director - Russia",
+      "GM GCC (since Sept 2021)",
+    ],
+    funFacts: [
+      "Mother of 3",
+      "Born in Russia",
+      "Learning French",
+    ],
+    hobby: "Fitness, Yoga & Cycling",
+    hobbyIcon: "🧘",
+  },
+  mohamed: {
+    name: "MOHAMED (TONSY)",
+    title: "Business Lead",
+    country: "Egypt",
+    countrySecondary: "Germany",
+    flag: "🇪🇬",
+    flagSecondary: "🇩🇪",
+    yearsAtHenkel: 12,
+    previousRoles: [
+      "Key Account Manager - MENA",
+      "Trade Marketing Lead - Egypt",
+      "Sales Representative - Cairo",
+    ],
+    funFacts: [
+      "Dual Egyptian-German heritage",
+      "Passionate about football",
+      "Expert in Arabic coffee making",
+    ],
+    hobby: "Football",
+    hobbyIcon: "⚽",
+  },
+  nicolas: {
+    name: "NICOLAS",
+    title: "Operations Director",
+    country: "France",
+    flag: "🇫🇷",
+    yearsAtHenkel: 10,
+    previousRoles: [
+      "Supply Chain Manager - Europe",
+      "Logistics Coordinator - France",
+      "Operations Analyst - Paris",
+    ],
+    funFacts: [
+      "Cycling enthusiast",
+      "Amateur chef specializing in French cuisine",
+      "Fluent in French, English, and Arabic",
+    ],
+    hobby: "Cycling",
+    hobbyIcon: "🚴",
+    landmark: "Eiffel Tower",
+  },
+  jude: {
+    name: "JUDE",
+    title: "Finance Manager",
+    country: "Sri Lanka",
+    flag: "🇱🇰",
+    yearsAtHenkel: 8,
+    previousRoles: [
+      "Financial Analyst - Asia Pacific",
+      "Accounting Lead - Sri Lanka",
+      "Junior Accountant - Colombo",
+    ],
+    funFacts: [
+      "Cricket fan and occasional player",
+      "Tea connoisseur",
+      "Yoga practitioner for 10+ years",
+    ],
+    hobby: "Cricket",
+    hobbyIcon: "🏏",
+  },
+  hany: {
+    name: "HANY",
+    title: "Marketing Lead",
+    country: "Egypt",
+    flag: "🇪🇬",
+    yearsAtHenkel: 9,
+    previousRoles: [
+      "Digital Marketing Manager - MENA",
+      "Brand Specialist - Egypt",
+      "Marketing Coordinator - Cairo",
+    ],
+    funFacts: [
+      "Social media expert with 50K+ followers",
+      "History buff, especially ancient Egypt",
+      "Loves Egyptian street food",
+    ],
+    hobby: "Photography",
+    hobbyIcon: "📷",
+    landmark: "Pyramids",
+  },
+  wael: {
+    name: "WAEL",
+    title: "Sales Director",
+    country: "Egypt",
+    flag: "🇪🇬",
+    yearsAtHenkel: 11,
+    previousRoles: [
+      "Regional Sales Manager - Gulf",
+      "Key Account Executive - UAE",
+      "Sales Representative - Egypt",
+    ],
+    funFacts: [
+      "Third generation in sales",
+      "Can negotiate in 5 languages",
+      "Known for his legendary customer relationships",
+    ],
+    hobby: "Scuba Diving",
+    hobbyIcon: "🤿",
+    isEgyptAgain: true,
+  },
+};
+
+// Crossfade transition component
 const CrossfadeTransition: React.FC<{
   children: React.ReactNode;
   duration: number;
   fadeInDuration?: number;
   fadeOutDuration?: number;
-  scaleEffect?: boolean;
-}> = ({ children, duration, fadeInDuration = 15, fadeOutDuration = 15, scaleEffect = false }) => {
+}> = ({ children, duration, fadeInDuration = 20, fadeOutDuration = 20 }) => {
   const frame = useCurrentFrame();
 
-  // Ensure minimum duration of 1 to avoid [0,0] range
   const safeInDuration = Math.max(1, fadeInDuration);
   const safeOutDuration = Math.max(1, fadeOutDuration);
 
@@ -49,150 +185,137 @@ const CrossfadeTransition: React.FC<{
     }
   );
 
-  const opacity = Math.min(fadeIn, fadeOut);
-
-  // Optional scale effect for more dynamic transitions
-  const scaleIn = scaleEffect ? interpolate(frame, [0, safeInDuration], [0.95, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  }) : 1;
-
-  const scaleOut = scaleEffect ? interpolate(
-    frame,
-    [duration - safeOutDuration, duration],
-    [1, 1.02],
-    {
-      extrapolateLeft: "clamp",
-      extrapolateRight: "clamp",
-    }
-  ) : 1;
-
-  const scale = frame < duration / 2 ? scaleIn : scaleOut;
-
   return (
-    <AbsoluteFill
-      style={{
-        opacity,
-        transform: `scale(${scale})`,
-      }}
-    >
+    <AbsoluteFill style={{ opacity: Math.min(fadeIn, fadeOut) }}>
       {children}
     </AbsoluteFill>
-  );
-};
-
-// Final fade component with Henkel red tint
-const FinalFade: React.FC = () => {
-  const frame = useCurrentFrame();
-
-  // Fade to black with subtle red tint
-  const opacity = interpolate(frame, [0, 45], [0, 1], {
-    extrapolateRight: "clamp",
-  });
-
-  const redOpacity = interpolate(frame, [0, 20, 45], [0, 0.15, 0], {
-    extrapolateRight: "clamp",
-  });
-
-  return (
-    <>
-      {/* Red tint flash before fade */}
-      <AbsoluteFill
-        style={{
-          backgroundColor: COLORS.henkelRed,
-          opacity: redOpacity,
-        }}
-      />
-      {/* Main fade to black */}
-      <AbsoluteFill
-        style={{
-          backgroundColor: COLORS.darkBg,
-          opacity,
-        }}
-      />
-    </>
   );
 };
 
 export const HenkelGCCVideo: React.FC = () => {
   return (
     <AbsoluteFill style={{ backgroundColor: COLORS.darkBg }}>
-      {/* Scene 1: Intro with flags */}
-      <Sequence from={SCENES.intro.start} durationInFrames={SCENES.intro.duration}>
+      {/* ============================================ */}
+      {/* ACT 1: THE HOOK (0:00 - 0:40) */}
+      {/* ============================================ */}
+      <Sequence from={SCENES.hook.start} durationInFrames={SCENES.hook.duration}>
         <CrossfadeTransition
-          duration={SCENES.intro.duration}
+          duration={SCENES.hook.duration}
           fadeInDuration={1}
-          fadeOutDuration={20}
-          scaleEffect
+          fadeOutDuration={30}
         >
-          <IntroScene />
+          <HookScene />
         </CrossfadeTransition>
       </Sequence>
 
-      {/* Scene 2: Logo Reveal */}
-      <Sequence from={SCENES.logoReveal.start} durationInFrames={SCENES.logoReveal.duration}>
+      {/* ============================================ */}
+      {/* ACT 2: GCC REGION INTRO (0:40 - 2:30) */}
+      {/* ============================================ */}
+      <Sequence from={SCENES.gccIntro.start} durationInFrames={SCENES.gccIntro.duration}>
         <CrossfadeTransition
-          duration={SCENES.logoReveal.duration}
-          fadeInDuration={20}
-          fadeOutDuration={15}
+          duration={SCENES.gccIntro.duration}
+          fadeInDuration={30}
+          fadeOutDuration={30}
         >
-          <LogoRevealScene />
+          <GCCRegionIntroScene />
         </CrossfadeTransition>
       </Sequence>
 
-      {/* Scene 3: Stats */}
-      <Sequence from={SCENES.stats.start} durationInFrames={SCENES.stats.duration}>
-        <CrossfadeTransition
-          duration={SCENES.stats.duration}
-          scaleEffect
-        >
-          <StatsScene />
-        </CrossfadeTransition>
-      </Sequence>
-
-      {/* Scene 4: Countries Breakdown */}
-      <Sequence from={SCENES.countries.start} durationInFrames={SCENES.countries.duration}>
-        <CrossfadeTransition duration={SCENES.countries.duration}>
-          <CountriesScene />
-        </CrossfadeTransition>
-      </Sequence>
-
-      {/* Scene 5: Plot Twist - Zero */}
+      {/* ============================================ */}
+      {/* ACT 3: THE PLOT TWIST (2:30 - 3:15) */}
+      {/* ============================================ */}
       <Sequence from={SCENES.plotTwist.start} durationInFrames={SCENES.plotTwist.duration}>
         <CrossfadeTransition
           duration={SCENES.plotTwist.duration}
-          fadeInDuration={10}
-          fadeOutDuration={20}
+          fadeInDuration={15}
+          fadeOutDuration={30}
         >
           <PlotTwistScene />
         </CrossfadeTransition>
       </Sequence>
 
-      {/* Scene 6: Team Reveal */}
-      <Sequence from={SCENES.teamReveal.start} durationInFrames={SCENES.teamReveal.duration}>
+      {/* ============================================ */}
+      {/* ACT 4: MEET THE TEAM (3:15 - 8:45) */}
+      {/* ~55 seconds per person */}
+      {/* ============================================ */}
+
+      {/* IRINA - General Manager 🇷🇺 */}
+      <Sequence from={SCENES.team.irina.start} durationInFrames={SCENES.team.irina.duration}>
         <CrossfadeTransition
-          duration={SCENES.teamReveal.duration}
-          fadeInDuration={20}
-          fadeOutDuration={15}
+          duration={SCENES.team.irina.duration}
+          fadeInDuration={25}
+          fadeOutDuration={25}
         >
-          <TeamRevealScene />
+          <TeamMemberProfileScene member={TEAM_MEMBERS.irina} />
         </CrossfadeTransition>
       </Sequence>
 
-      {/* Scene 7: Closing */}
+      {/* MOHAMED (TONSY) 🇪🇬🇩🇪 */}
+      <Sequence from={SCENES.team.mohamed.start} durationInFrames={SCENES.team.mohamed.duration}>
+        <CrossfadeTransition
+          duration={SCENES.team.mohamed.duration}
+          fadeInDuration={25}
+          fadeOutDuration={25}
+        >
+          <TeamMemberProfileScene member={TEAM_MEMBERS.mohamed} />
+        </CrossfadeTransition>
+      </Sequence>
+
+      {/* NICOLAS 🇫🇷 */}
+      <Sequence from={SCENES.team.nicolas.start} durationInFrames={SCENES.team.nicolas.duration}>
+        <CrossfadeTransition
+          duration={SCENES.team.nicolas.duration}
+          fadeInDuration={25}
+          fadeOutDuration={25}
+        >
+          <TeamMemberProfileScene member={TEAM_MEMBERS.nicolas} />
+        </CrossfadeTransition>
+      </Sequence>
+
+      {/* JUDE 🇱🇰 */}
+      <Sequence from={SCENES.team.jude.start} durationInFrames={SCENES.team.jude.duration}>
+        <CrossfadeTransition
+          duration={SCENES.team.jude.duration}
+          fadeInDuration={25}
+          fadeOutDuration={25}
+        >
+          <TeamMemberProfileScene member={TEAM_MEMBERS.jude} />
+        </CrossfadeTransition>
+      </Sequence>
+
+      {/* HANY 🇪🇬 */}
+      <Sequence from={SCENES.team.hany.start} durationInFrames={SCENES.team.hany.duration}>
+        <CrossfadeTransition
+          duration={SCENES.team.hany.duration}
+          fadeInDuration={25}
+          fadeOutDuration={25}
+        >
+          <TeamMemberProfileScene member={TEAM_MEMBERS.hany} />
+        </CrossfadeTransition>
+      </Sequence>
+
+      {/* WAEL 🇪🇬 (Egypt again!) */}
+      <Sequence from={SCENES.team.wael.start} durationInFrames={SCENES.team.wael.duration}>
+        <CrossfadeTransition
+          duration={SCENES.team.wael.duration}
+          fadeInDuration={25}
+          fadeOutDuration={25}
+        >
+          <TeamMemberProfileScene member={TEAM_MEMBERS.wael} />
+        </CrossfadeTransition>
+      </Sequence>
+
+      {/* ============================================ */}
+      {/* ACT 5: CLOSING (8:45 - 10:00) */}
+      {/* ============================================ */}
       <Sequence from={SCENES.closing.start} durationInFrames={SCENES.closing.duration}>
         <CrossfadeTransition
           duration={SCENES.closing.duration}
-          fadeInDuration={15}
+          fadeInDuration={25}
           fadeOutDuration={0}
         >
           <ClosingScene />
         </CrossfadeTransition>
-      </Sequence>
-
-      {/* Final fade to black with red tint */}
-      <Sequence from={2240} durationInFrames={60}>
-        <FinalFade />
       </Sequence>
     </AbsoluteFill>
   );
