@@ -8,13 +8,14 @@ import { GCCMap } from '../components/GCCMap';
 import { MapInfoCard } from '../components/MapInfoCard';
 import { CounterNumber } from '../components/CounterNumber';
 
+// Card positions matched to real geodata centroids
 const CARD_POSITIONS: Record<string, { x: number; y: number }> = {
-  KSA: { x: 760, y: 280 },
-  UAE: { x: 830, y: 180 },
-  KWT: { x: 260, y: 20 },
-  OMN: { x: 870, y: 340 },
-  BHR: { x: 240, y: 100 },
-  QAT: { x: 780, y: 80 },
+  KSA: { x: 580, y: 360 },
+  UAE: { x: 890, y: 290 },
+  KWT: { x: 360, y: 80 },
+  OMN: { x: 950, y: 450 },
+  BHR: { x: 470, y: 250 },
+  QAT: { x: 780, y: 210 },
 };
 
 export const Scene4_GCCMap: React.FC = () => {

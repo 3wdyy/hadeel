@@ -1,37 +1,22 @@
 import React from 'react';
 import { useCurrentFrame, useVideoConfig, interpolate, Easing } from 'remotion';
-import { pinDrop, strokeDraw, fadeIn, pulseRing } from '../config/animation';
+import { pinDrop, strokeDraw, pulseRing } from '../config/animation';
 import { COLORS } from '../config/brand';
 import type { NationalityPin } from '../config/data';
 import { GCC_CENTER } from '../config/data';
+import { WORLD_LAND_PATH, WORLD_GCC_PATHS, WORLD_PROJECTION } from '../data/world-geo';
 
-function latLngToXY(lat: number, lng: number, width: number, height: number): [number, number] {
-  const x = ((lng + 180) / 360) * width;
-  const y = ((90 - lat) / 180) * height;
-  return [x, y];
+// NaturalEarth1 projection matching d3-geo's implementation
+function projectPoint(lat: number, lng: number): [number, number] {
+  const { scale, translate } = WORLD_PROJECTION;
+  const lngRad = (lng * Math.PI) / 180;
+  const latRad = (lat * Math.PI) / 180;
+  const lat2 = latRad * latRad;
+  const lat4 = lat2 * lat2;
+  const x = lngRad * (0.8707 - 0.131979 * lat2 + lat4 * (-0.013791 + lat4 * (0.003971 * lat2 - 0.001529 * lat4)));
+  const y = latRad * (1.007226 + lat2 * (0.015085 + lat4 * (-0.044475 + 0.028874 * lat2 - 0.005916 * lat4)));
+  return [x * scale + translate[0], -y * scale + translate[1]];
 }
-
-// Improved continent outlines
-const CONTINENT_PATHS = [
-  // North America
-  'M 60 100 L 90 80 L 130 70 L 170 65 L 210 75 L 240 95 L 250 120 L 240 155 L 215 185 L 190 210 L 170 235 L 155 250 L 140 245 L 120 230 L 105 210 L 90 185 L 75 155 L 65 130 Z',
-  // South America
-  'M 195 275 L 220 260 L 245 270 L 255 295 L 260 330 L 255 365 L 245 395 L 230 415 L 215 425 L 200 415 L 195 385 L 190 350 L 188 315 Z',
-  // Europe
-  'M 430 65 L 455 55 L 485 60 L 515 65 L 535 80 L 540 100 L 530 120 L 510 130 L 485 135 L 460 130 L 440 115 L 435 90 Z',
-  // Africa
-  'M 435 150 L 465 140 L 500 145 L 530 160 L 545 190 L 550 230 L 545 275 L 530 310 L 510 335 L 485 345 L 465 340 L 445 315 L 435 280 L 430 240 L 430 200 Z',
-  // Asia
-  'M 535 55 L 580 45 L 640 50 L 700 60 L 750 80 L 790 100 L 800 130 L 795 160 L 770 180 L 730 190 L 690 185 L 650 175 L 610 165 L 575 155 L 550 140 L 540 115 L 535 85 Z',
-  // Middle East (highlighted)
-  'M 530 120 L 555 112 L 575 120 L 585 140 L 580 165 L 560 172 L 542 168 L 532 150 Z',
-  // South Asia
-  'M 618 155 L 645 148 L 668 165 L 660 200 L 645 225 L 625 215 L 618 190 Z',
-  // Southeast Asia
-  'M 700 168 L 735 158 L 765 175 L 775 205 L 760 225 L 730 218 L 710 198 Z',
-  // Australia
-  'M 740 298 L 785 288 L 815 305 L 818 335 L 800 355 L 760 348 L 742 328 Z',
-];
 
 interface WorldMapProps {
   pins: NationalityPin[];
@@ -53,9 +38,9 @@ export const WorldMap: React.FC<WorldMapProps> = ({
   const { fps } = useVideoConfig();
 
   const mapWidth = 900;
-  const mapHeight = 450;
+  const mapHeight = 460;
 
-  const [gccX, gccY] = latLngToXY(GCC_CENTER.lat, GCC_CENTER.lng, mapWidth, mapHeight);
+  const [gccX, gccY] = projectPoint(GCC_CENTER.lat, GCC_CENTER.lng);
 
   const getArcPath = (x1: number, y1: number, x2: number, y2: number): string => {
     const midX = (x1 + x2) / 2;
@@ -91,23 +76,28 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       {/* Background dot grid */}
       <rect width={mapWidth} height={mapHeight} fill="url(#worldGridDots)" />
 
-      {/* Continent outlines */}
-      {CONTINENT_PATHS.map((path, i) => {
-        const isMiddleEast = i === 5;
-        return (
-          <path
-            key={i}
-            d={path}
-            fill={isMiddleEast ? 'rgba(225, 0, 15, 0.12)' : COLORS.elevatedSurface}
-            stroke={isMiddleEast ? 'rgba(225, 0, 15, 0.3)' : 'rgba(148, 163, 184, 0.12)'}
-            strokeWidth={isMiddleEast ? 1 : 0.5}
-          />
-        );
-      })}
+      {/* Real world land mass */}
+      <path
+        d={WORLD_LAND_PATH}
+        fill={COLORS.elevatedSurface}
+        stroke="rgba(148, 163, 184, 0.12)"
+        strokeWidth={0.5}
+      />
+
+      {/* GCC region highlight */}
+      {WORLD_GCC_PATHS.map((path, i) => (
+        <path
+          key={`gcc-${i}`}
+          d={path}
+          fill="rgba(225, 0, 15, 0.15)"
+          stroke="rgba(225, 0, 15, 0.3)"
+          strokeWidth={0.8}
+        />
+      ))}
 
       {/* Connection arcs */}
       {pins.map((pin, i) => {
-        const [px, py] = latLngToXY(pin.lat, pin.lng, mapWidth, mapHeight);
+        const [px, py] = projectPoint(pin.lat, pin.lng);
         const arcPath = getArcPath(px, py, gccX, gccY);
 
         const dx = gccX - px;
@@ -150,7 +140,7 @@ export const WorldMap: React.FC<WorldMapProps> = ({
       {/* Nationality pins */}
       {pins.map((pin, i) => {
         const pinFrame = pinStartFrame + i * pinStagger;
-        const [px, py] = latLngToXY(pin.lat, pin.lng, mapWidth, mapHeight);
+        const [px, py] = projectPoint(pin.lat, pin.lng);
 
         if (frame < pinFrame) return null;
 
