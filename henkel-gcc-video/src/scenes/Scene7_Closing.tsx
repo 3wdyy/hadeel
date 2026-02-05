@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Img, staticFile } from 'remotion';
 import { COLORS, FONT_FAMILY, TYPOGRAPHY } from '../config/brand';
 import { S7 } from '../config/timing';
 import { NATIONALITY_PINS, SCENE7A_TEXT, SCENE7B_TEXT } from '../config/data';
@@ -35,10 +35,13 @@ export const Scene7_Closing: React.FC = () => {
       {isWorldMapPhase && (
         <AbsoluteFill
           style={{
-            background: 'linear-gradient(180deg, #1A1A1A 0%, #2D2D2D 100%)',
             opacity: worldMapOpacity,
           }}
         >
+          <Img
+            src={staticFile('backgrounds/bg-dark-premium.png')}
+            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
+          />
           {/* World map with pins */}
           <WorldMap
             pins={NATIONALITY_PINS}
@@ -84,11 +87,11 @@ export const Scene7_Closing: React.FC = () => {
 
       {/* ── Phase 7B: Brand Close ── */}
       {isBrandClose && (
-        <AbsoluteFill
-          style={{
-            background: `radial-gradient(ellipse at center, #E8202F 0%, ${COLORS.henkelRed} 50%, #C1000D 100%)`,
-          }}
-        >
+        <AbsoluteFill>
+          <Img
+            src={staticFile('backgrounds/bg-red-texture.png')}
+            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
+          />
           {/* Closing text */}
           {frame >= S7.closingTextAppear && (
             <div

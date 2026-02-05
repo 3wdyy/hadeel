@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Img, staticFile } from 'remotion';
 import { COLORS, FONT_FAMILY, TYPOGRAPHY } from '../config/brand';
 import { S4, SCENES } from '../config/timing';
 import { SUMMARY_OVERLAY_1, SUMMARY_OVERLAY_2 } from '../config/data';
@@ -72,14 +72,15 @@ export const Scene4_GCCMap: React.FC = () => {
 
   return (
     <AbsoluteFill>
-      {/* Background — warm gray CSS fallback */}
-      <AbsoluteFill
-        style={{
-          background: `radial-gradient(ellipse at center, #F5F0EB 0%, #EDE5DA 70%, #E5DAD0 100%)`,
-        }}
-      />
+      {/* Background — warm gray */}
+      <AbsoluteFill>
+        <Img
+          src={staticFile('backgrounds/bg-warm-gray.png')}
+          style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
+        />
+      </AbsoluteFill>
       {/* Subtle white overlay to soften */}
-      <AbsoluteFill style={{ backgroundColor: 'rgba(255,255,255,0.3)' }} />
+      <AbsoluteFill style={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
 
       {/* Map Container */}
       <div

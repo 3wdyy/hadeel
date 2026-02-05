@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Img, staticFile } from 'remotion';
 import { COLORS, FONT_FAMILY, TYPOGRAPHY } from '../config/brand';
 import { S1 } from '../config/timing';
 import { SCENE1_LINES } from '../config/data';
@@ -151,11 +151,11 @@ export const Scene1_ColdOpen: React.FC = () => {
 
       {/* ── Red Screen Phase ── */}
       {isRedScreen && (
-        <AbsoluteFill
-          style={{
-            background: redBg,
-          }}
-        >
+        <AbsoluteFill>
+          <Img
+            src={staticFile('backgrounds/bg-red-texture.png')}
+            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
+          />
           <div
             style={{
               position: 'absolute',

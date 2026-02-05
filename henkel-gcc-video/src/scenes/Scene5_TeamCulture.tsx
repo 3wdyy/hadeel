@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Img, staticFile } from 'remotion';
 import { COLORS, FONT_FAMILY, TYPOGRAPHY } from '../config/brand';
 import { S5, SCENES } from '../config/timing';
 import { CULTURE_ROUNDS } from '../config/data';
@@ -63,12 +63,14 @@ export const Scene5_TeamCulture: React.FC = () => {
       {isDiversityPhase && (
         <AbsoluteFill
           style={{
-            background: `radial-gradient(ellipse at center, #E8202F 0%, ${COLORS.henkelRed} 50%, #C1000D 100%)`,
             opacity: diversityOpacity,
           }}
         >
-          {/* Red texture overlay */}
-          <AbsoluteFill style={{ backgroundColor: `rgba(225, 0, 15, 0.3)` }} />
+          {/* Red texture background */}
+          <Img
+            src={staticFile('backgrounds/bg-red-texture.png')}
+            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
+          />
 
           {/* Floating particles */}
           <FloatingParticles

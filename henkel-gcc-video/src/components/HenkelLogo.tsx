@@ -1,7 +1,7 @@
 import React from 'react';
-import { useCurrentFrame } from 'remotion';
+import { useCurrentFrame, staticFile, Img } from 'remotion';
 import { fadeIn } from '../config/animation';
-import { LOGO, FONT_FAMILY, COLORS } from '../config/brand';
+import { LOGO } from '../config/brand';
 
 export const HenkelLogo: React.FC = () => {
   const frame = useCurrentFrame();
@@ -21,24 +21,10 @@ export const HenkelLogo: React.FC = () => {
         zIndex: 100,
       }}
     >
-      {/* SVG Henkel logo placeholder — replace with actual henkel-logo.svg when available */}
-      <svg width="120" height={LOGO.maxHeight} viewBox="0 0 120 40">
-        <rect
-          x="0" y="5" width="120" height="30" rx="4"
-          fill={COLORS.henkelRed}
-        />
-        <text
-          x="60" y="26"
-          textAnchor="middle"
-          fontFamily={FONT_FAMILY}
-          fontSize="16"
-          fontWeight="700"
-          fill="white"
-          letterSpacing="2"
-        >
-          HENKEL
-        </text>
-      </svg>
+      <Img
+        src={staticFile('henkel-logo.png')}
+        style={{ height: LOGO.maxHeight, width: 'auto' }}
+      />
     </div>
   );
 };

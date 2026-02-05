@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, staticFile, interpolate } from 'remotion';
+import { AbsoluteFill, useCurrentFrame, useVideoConfig, staticFile, interpolate, Img } from 'remotion';
 import { COLORS, FONT_FAMILY, TYPOGRAPHY, SPACING } from '../config/brand';
 import { S6 } from '../config/timing';
 import { EXCOM_ROSTER, SCENE6D_TEXT } from '../config/data';
@@ -80,10 +80,13 @@ export const Scene6_ExComReveal: React.FC = () => {
       {bgTransition < 1 && (
         <AbsoluteFill
           style={{
-            background: 'radial-gradient(ellipse at center, #2A2A2A 0%, #1A1A1A 50%, #0D0D0D 100%)',
             opacity: 1 - bgTransition,
           }}
         >
+          <Img
+            src={staticFile('backgrounds/bg-dark-premium.png')}
+            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
+          />
           <FloatingParticles
             count={9}
             color={COLORS.warmGold}
