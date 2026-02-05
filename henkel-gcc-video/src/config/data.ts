@@ -12,7 +12,7 @@ export const SCENE1_LINES = {
 export const SCENE2 = {
   leftLabel: '1950s',
   rightLabel: '2020s',
-  centerText: '40 years. One transformation.',
+  centerText: '70 years. One transformation.',
 };
 
 export const SCENE3_TITLE = 'This is the GCC.';
@@ -31,7 +31,7 @@ export const GCC_COUNTRIES: GCCCountry[] = [
   { order: 1, name: 'Saudi Arabia', code: 'KSA', flag: '🇸🇦', sobPercent: 54, population: '35.3M', pppCapita: '55 T€' },
   { order: 2, name: 'UAE', code: 'UAE', flag: '🇦🇪', sobPercent: 22, population: '10.5M', pppCapita: '84 T€' },
   { order: 3, name: 'Kuwait', code: 'KWT', flag: '🇰🇼', sobPercent: 13, population: '4.9M', pppCapita: '56 T€' },
-  { order: 4, name: 'Oman', code: 'OMN', flag: '🇴🇲', sobPercent: 6, population: '5.0M', pppCapita: '121 T€' },
+  { order: 4, name: 'Oman', code: 'OMN', flag: '🇴🇲', sobPercent: 6, population: '5.0M', pppCapita: '37 T€' },
   { order: 5, name: 'Bahrain', code: 'BHR', flag: '🇧🇭', sobPercent: 3, population: '1.6M', pppCapita: '64 T€' },
   { order: 6, name: 'Qatar', code: 'QAT', flag: '🇶🇦', sobPercent: 2, population: '2.7M', pppCapita: '74 T€' },
 ];
@@ -147,12 +147,13 @@ export const NATIONALITY_PINS: NationalityPin[] = [
   { country: 'Philippines', lat: 14.60, lng: 120.98 },
   { country: 'Russia', lat: 55.75, lng: 37.62 },
   { country: 'Germany', lat: 52.52, lng: 13.41 },
+  { country: 'France', lat: 48.86, lng: 2.35 },
   { country: 'Cuba', lat: 23.11, lng: -82.37 },
   { country: 'St. Kitts', lat: 17.30, lng: -62.73 },
 ];
 
 export const GCC_CENTER = { lat: 24, lng: 48 };
 
-export const SCENE7A_TEXT = '17 Nationalities. One Team.';
+export const SCENE7A_TEXT = '18 Nationalities. One Team.';
 export const SCENE7B_TEXT = 'This is GCC HCB Team.';
 export const SCENE6D_TEXT = 'Cross Functional Team';

@@ -7,6 +7,7 @@ interface TextGlowProps {
   fontWeight: number;
   color: string;
   glowColor?: string;
+  glowIntensity?: number;
   style?: React.CSSProperties;
 }
 
@@ -16,48 +17,30 @@ export const TextGlow: React.FC<TextGlowProps> = ({
   fontWeight,
   color,
   glowColor,
+  glowIntensity = 1,
   style = {},
 }) => {
-  const glow = glowColor || (color === '#FFFFFF' || color === 'white'
-    ? 'rgba(255, 255, 255, 0.15)'
-    : 'rgba(225, 0, 15, 0.15)');
+  const glow = glowColor || (color === '#FFFFFF' || color === 'white' || color === '#F1F5F9'
+    ? 'rgba(255, 255, 255, 0.3)'
+    : 'rgba(225, 0, 15, 0.3)');
 
   return (
-    <div style={{ position: 'relative', ...style }}>
-      {/* Glow layer */}
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          fontFamily: FONT_FAMILY,
-          fontSize,
-          fontWeight,
-          color: glow,
-          transform: 'scale(1.02)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 0,
-        }}
-      >
-        {text}
-      </div>
-      {/* Main text */}
-      <div
-        style={{
-          position: 'relative',
-          fontFamily: FONT_FAMILY,
-          fontSize,
-          fontWeight,
-          color,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1,
-        }}
-      >
-        {text}
-      </div>
-    </div>
+    <span
+      style={{
+        fontFamily: FONT_FAMILY,
+        fontSize,
+        fontWeight,
+        color,
+        textShadow: [
+          `0 0 ${10 * glowIntensity}px ${glow}`,
+          `0 0 ${20 * glowIntensity}px ${glow}`,
+          `0 0 ${40 * glowIntensity}px ${glow}`,
+          `0 0 ${80 * glowIntensity}px rgba(225, 0, 15, 0.08)`,
+        ].join(', '),
+        ...style,
+      }}
+    >
+      {text}
+    </span>
   );
 };

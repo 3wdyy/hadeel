@@ -1,15 +1,18 @@
 import React from 'react';
 import { useCurrentFrame, staticFile, Img } from 'remotion';
-import { fadeIn } from '../config/animation';
+import { fadeIn, fadeOut } from '../config/animation';
 import { LOGO } from '../config/brand';
 
 export const HenkelLogo: React.FC = () => {
   const frame = useCurrentFrame();
 
-  // Only visible from frame 600 to 3510
   if (frame < LOGO.startFrame || frame > LOGO.endFrame) return null;
 
-  const opacity = fadeIn(frame, LOGO.startFrame, 15) * LOGO.opacity;
+  const fadeInOp = fadeIn(frame, LOGO.startFrame, 15);
+  const fadeOutOp = frame >= LOGO.endFrame - 20
+    ? fadeOut(frame, LOGO.endFrame - 20, 20)
+    : 1;
+  const opacity = fadeInOp * fadeOutOp * LOGO.opacity;
 
   return (
     <div

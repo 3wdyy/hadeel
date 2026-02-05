@@ -10,6 +10,7 @@ export const SPRING_PRESETS = {
   gentle: { damping: 14, mass: 0.6, stiffness: 120, overshootClamping: false },
   bouncy: { damping: 8, mass: 0.8, stiffness: 150, overshootClamping: false },
   slowReveal: { damping: 20, mass: 1.0, stiffness: 80, overshootClamping: true },
+  cinematic: { damping: 22, mass: 1.2, stiffness: 60, overshootClamping: true },
 } as const;
 
 type SpringPreset = keyof typeof SPRING_PRESETS;
@@ -166,4 +167,71 @@ export function strokeDraw(
     },
   );
   return { strokeDasharray: pathLength, strokeDashoffset: offset };
+}
+
+// ─── Pulse ring animation (expanding, fading ring) ───
+export function pulseRing(
+  frame: number,
+  startFrame: number,
+  loopDuration: number = 60,
+  minRadius: number = 8,
+  maxRadius: number = 30,
+) {
+  if (frame < startFrame) return { radius: minRadius, opacity: 0 };
+  const loopedFrame = (frame - startFrame) % loopDuration;
+  const radius = interpolate(loopedFrame, [0, loopDuration], [minRadius, maxRadius]);
+  const opacity = interpolate(loopedFrame, [0, loopDuration], [0.6, 0]);
+  return { radius, opacity };
+}
+
+// ─── Blur transition helper ───
+export function blurTransition(
+  frame: number,
+  startFrame: number,
+  duration: number = 15,
+  maxBlur: number = 8,
+) {
+  return interpolate(frame, [startFrame, startFrame + duration], [0, maxBlur], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+}
+
+// ─── Animated gradient angle ───
+export function animatedGradientAngle(
+  frame: number,
+  startFrame: number,
+  endFrame: number,
+  startAngle: number = 120,
+  endAngle: number = 160,
+) {
+  return interpolate(frame, [startFrame, endFrame], [startAngle, endAngle], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+}
+
+// ─── Drifting orb position (for animated gradient mesh) ───
+export function driftingOrb(
+  frame: number,
+  speed: number = 0.008,
+  amplitude: number = 15,
+  baseX: number = 30,
+  baseY: number = 40,
+) {
+  const x = baseX + Math.sin(frame * speed) * amplitude;
+  const y = baseY + Math.cos(frame * speed * 0.75) * (amplitude * 0.67);
+  return { x, y };
+}
+
+// ─── Twinkle (sine-based opacity modulation) ───
+export function twinkle(
+  frame: number,
+  index: number,
+  speed: number = 0.15,
+  min: number = 0.6,
+  max: number = 1.0,
+) {
+  const range = max - min;
+  return min + range * (0.5 + 0.5 * Math.sin(frame * speed + index * 2.5));
 }

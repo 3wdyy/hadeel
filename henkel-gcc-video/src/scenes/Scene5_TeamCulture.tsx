@@ -1,9 +1,9 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, interpolate, Img, staticFile } from 'remotion';
-import { COLORS, FONT_FAMILY, TYPOGRAPHY } from '../config/brand';
-import { S5, SCENES } from '../config/timing';
+import { COLORS, FONT_FAMILY, TYPOGRAPHY, GRADIENTS } from '../config/brand';
+import { S5 } from '../config/timing';
 import { CULTURE_ROUNDS } from '../config/data';
-import { fadeIn, fadeOut, slideUpIn, scaleIn, scalePulse } from '../config/animation';
+import { fadeIn, fadeOut, slideUpIn, scaleIn, scalePulse, driftingOrb } from '../config/animation';
 import { FloatingParticles } from '../components/FloatingParticles';
 import { TextGlow } from '../components/TextGlow';
 import { PhotoGrid } from '../components/PhotoGrid';
@@ -12,7 +12,6 @@ export const Scene5_TeamCulture: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Determine which phase we're in
   const isDiversityPhase = frame >= S5.diversityStart && frame < S5.diversityEnd;
   const isMontagePhase = frame >= S5.montageStart && frame < S5.montageEnd;
   const isExcomTitlePhase = frame >= S5.excomTitleStart;
@@ -22,13 +21,6 @@ export const Scene5_TeamCulture: React.FC = () => {
     ? fadeIn(frame, S5.diversityStart, 15) *
       (frame >= S5.diversityEnd - 20 ? fadeOut(frame, S5.diversityEnd - 20, 20) : 1)
     : 0;
-
-  // Calculate vertical stacking: lines appear bottom-up, pushing stack upward
-  const visibleLines = S5.diversityLines.filter(l => frame >= l.appear);
-  const stackCenterY = 50; // % from top
-  const lineHeight = 70; // px between lines
-  const totalHeight = visibleLines.length * lineHeight;
-  const stackStartY = stackCenterY; // center-aligned
 
   // ─── Phase 5B: Culture Montage ───
   const montageOpacity = isMontagePhase
@@ -49,7 +41,6 @@ export const Scene5_TeamCulture: React.FC = () => {
       (frame >= S5.fadeToBlackStart ? fadeOut(frame, S5.fadeToBlackStart, 15) : 1)
     : 0;
 
-  // Fade to black overlay
   const blackOverlay = frame >= S5.fadeToBlackStart
     ? interpolate(frame, [S5.fadeToBlackStart, S5.fadeToBlackEnd], [0, 1], {
         extrapolateLeft: 'clamp',
@@ -57,94 +48,88 @@ export const Scene5_TeamCulture: React.FC = () => {
       })
     : 0;
 
+  // Animated background orb
+  const orb = driftingOrb(frame, 0.006, 12, 50, 50);
+
   return (
     <AbsoluteFill>
-      {/* ── Phase 5A Background: Red ── */}
+      {/* ── Phase 5A: Diversity on Brand Red ── */}
       {isDiversityPhase && (
-        <AbsoluteFill
-          style={{
-            opacity: diversityOpacity,
-          }}
-        >
-          {/* Red texture background */}
+        <AbsoluteFill style={{ opacity: diversityOpacity }}>
+          <AbsoluteFill style={{ background: GRADIENTS.brandRed }} />
           <Img
             src={staticFile('backgrounds/bg-red-texture.png')}
-            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }}
           />
 
-          {/* Floating particles */}
+          {/* Animated radial highlight */}
+          <AbsoluteFill style={{
+            background: `radial-gradient(ellipse at ${orb.x}% ${orb.y}%, rgba(255, 255, 255, 0.06) 0%, transparent 50%)`,
+            pointerEvents: 'none',
+          }} />
+
+          <AbsoluteFill style={{ background: GRADIENTS.vignette, pointerEvents: 'none' }} />
+
           <FloatingParticles
-            count={13}
-            color={COLORS.warmGold}
-            maxOpacity={0.35}
+            count={20}
+            color="rgba(255, 255, 255, 0.5)"
+            maxOpacity={0.3}
             startFrame={S5.diversityStart}
             duration={S5.diversityEnd - S5.diversityStart}
           />
 
           {/* Text stack */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 12,
-            }}
-          >
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            gap: 16,
+          }}>
             {S5.diversityLines.map((line, i) => {
               if (frame < line.appear) return null;
 
               const opacity = fadeIn(frame, line.appear, 12);
               const translateY = slideUpIn(frame, fps, line.appear, 40);
-
               const isEmphasis = line.emphasis;
-              const fontSize = isEmphasis ? 64 : TYPOGRAPHY.subheadline.fontSize;
+              const fontSize = isEmphasis ? 68 : TYPOGRAPHY.subheadline.fontSize;
               const fontWeight = isEmphasis ? 700 : TYPOGRAPHY.subheadline.fontWeight;
 
-              // Scale pulse for "One Team."
               const pulse = isEmphasis && frame >= 2140
                 ? scalePulse(frame, 2140, 20, 1.05)
                 : 1;
 
               if (isEmphasis) {
                 return (
-                  <div
-                    key={i}
-                    style={{
-                      opacity,
-                      transform: `translateY(${translateY}px) scale(${pulse})`,
-                    }}
-                  >
+                  <div key={i} style={{
+                    opacity,
+                    transform: `translateY(${translateY}px) scale(${pulse})`,
+                    marginTop: 8,
+                  }}>
                     <TextGlow
                       text={line.text}
                       fontSize={fontSize}
                       fontWeight={fontWeight}
-                      color={COLORS.white}
-                      glowColor="rgba(255, 255, 255, 0.15)"
+                      color={COLORS.iceWhite}
+                      glowColor="rgba(255, 255, 255, 0.4)"
+                      glowIntensity={2}
                     />
                   </div>
                 );
               }
 
               return (
-                <div
-                  key={i}
-                  style={{
-                    opacity,
-                    transform: `translateY(${translateY}px)`,
-                  }}
-                >
-                  <span
-                    style={{
-                      fontFamily: FONT_FAMILY,
-                      fontSize,
-                      fontWeight,
-                      color: COLORS.white,
-                      letterSpacing: TYPOGRAPHY.subheadline.letterSpacing,
-                    }}
-                  >
+                <div key={i} style={{
+                  opacity,
+                  transform: `translateY(${translateY}px)`,
+                }}>
+                  <span style={{
+                    fontFamily: FONT_FAMILY,
+                    fontSize,
+                    fontWeight,
+                    color: COLORS.iceWhite,
+                    letterSpacing: TYPOGRAPHY.subheadline.letterSpacing,
+                    textShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+                  }}>
                     {line.text}
                   </span>
                 </div>
@@ -154,46 +139,41 @@ export const Scene5_TeamCulture: React.FC = () => {
         </AbsoluteFill>
       )}
 
-      {/* ── Phase 5B Background: White + Photo Grid ── */}
+      {/* ── Phase 5B: Culture Montage on Dark ── */}
       {isMontagePhase && (
-        <AbsoluteFill
-          style={{
-            backgroundColor: COLORS.white,
-            opacity: montageOpacity,
-          }}
-        >
+        <AbsoluteFill style={{ opacity: montageOpacity }}>
+          <AbsoluteFill style={{ background: GRADIENTS.cinematic }} />
+          <AbsoluteFill style={{ background: GRADIENTS.vignette, pointerEvents: 'none' }} />
           <PhotoGrid rounds={photoRounds} />
         </AbsoluteFill>
       )}
 
-      {/* ── Phase 5C: ExCom Title on White ── */}
+      {/* ── Phase 5C: ExCom Title on Dark ── */}
       {isExcomTitlePhase && (
-        <AbsoluteFill style={{ backgroundColor: COLORS.white }}>
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: excomTitleOpacity,
-              transform: `scale(${scaleIn(frame, fps, S5.excomTitleAppear, 0.85)})`,
-            }}
-          >
-            <span
-              style={{
-                fontFamily: FONT_FAMILY,
-                fontSize: TYPOGRAPHY.sectionTitle.fontSize,
-                fontWeight: TYPOGRAPHY.sectionTitle.fontWeight,
-                color: COLORS.henkelRed,
-                letterSpacing: TYPOGRAPHY.sectionTitle.letterSpacing,
-              }}
-            >
+        <AbsoluteFill style={{ background: GRADIENTS.titleCard }}>
+          <AbsoluteFill style={{ background: GRADIENTS.vignette, pointerEvents: 'none' }} />
+
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: excomTitleOpacity,
+            transform: `scale(${scaleIn(frame, fps, S5.excomTitleAppear, 0.85, 'cinematic')})`,
+          }}>
+            <span style={{
+              fontFamily: FONT_FAMILY,
+              fontSize: TYPOGRAPHY.sectionTitle.fontSize,
+              fontWeight: TYPOGRAPHY.sectionTitle.fontWeight,
+              background: `linear-gradient(135deg, ${COLORS.henkelRed} 0%, ${COLORS.radiantRed} 50%, ${COLORS.henkelRed} 100%)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              filter: 'drop-shadow(0 0 30px rgba(225, 0, 15, 0.25))',
+              letterSpacing: TYPOGRAPHY.sectionTitle.letterSpacing,
+            }}>
               GCC ExCom
             </span>
           </div>
 
-          {/* Fade to black overlay */}
           <AbsoluteFill style={{ backgroundColor: COLORS.black, opacity: blackOverlay }} />
         </AbsoluteFill>
       )}

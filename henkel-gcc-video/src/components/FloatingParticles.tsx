@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useCurrentFrame, interpolate } from 'remotion';
 import { COLORS } from '../config/brand';
+import { twinkle } from '../config/animation';
 
 interface FloatingParticlesProps {
   count?: number;
@@ -11,15 +12,14 @@ interface FloatingParticlesProps {
 }
 
 export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
-  count = 15,
+  count = 30,
   color = COLORS.warmGold,
-  maxOpacity = 0.4,
+  maxOpacity = 0.5,
   startFrame = 0,
   duration = 300,
 }) => {
   const frame = useCurrentFrame();
 
-  // Generate stable random particle configs
   const particles = useMemo(() => {
     const seed = 42;
     const rng = (i: number) => {
@@ -28,12 +28,13 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
     };
 
     return Array.from({ length: count }, (_, i) => ({
-      x: rng(i * 3) * 100,             // % from left
-      size: 3 + rng(i * 3 + 1) * 3,    // 3-6px
+      x: rng(i * 3) * 100,
+      baseSize: 2 + rng(i * 3 + 1) * 8,
       delayFrames: Math.floor(rng(i * 3 + 2) * duration * 0.7),
-      lifeDuration: 90 + Math.floor(rng(i * 5) * 60), // 90-150 frames
-      driftAmplitude: 5 + rng(i * 7) * 10,
-      travelY: 100 + rng(i * 11) * 100,  // 100-200px travel
+      lifeDuration: 90 + Math.floor(rng(i * 5) * 80),
+      driftAmplitude: 8 + rng(i * 7) * 15,
+      travelY: 120 + rng(i * 11) * 150,
+      glowSize: 3 + rng(i * 13) * 4,
     }));
   }, [count, duration]);
 
@@ -41,19 +42,20 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
     <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
       {particles.map((p, i) => {
         const particleFrame = frame - startFrame - p.delayFrames;
-        // Loop particles
         const loopedFrame = particleFrame >= 0
           ? particleFrame % (p.lifeDuration + 30)
           : -1;
 
         if (loopedFrame < 0) return null;
 
-        const opacity = interpolate(
+        const baseOpacity = interpolate(
           loopedFrame,
-          [0, p.lifeDuration * 0.2, p.lifeDuration * 0.8, p.lifeDuration],
+          [0, p.lifeDuration * 0.15, p.lifeDuration * 0.75, p.lifeDuration],
           [0, maxOpacity, maxOpacity, 0],
           { extrapolateRight: 'clamp', extrapolateLeft: 'clamp' },
         );
+
+        const opacity = baseOpacity * twinkle(frame, i);
 
         const translateY = interpolate(
           loopedFrame,
@@ -62,7 +64,8 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
           { extrapolateRight: 'clamp' },
         );
 
-        const translateX = Math.sin(loopedFrame * 0.05) * p.driftAmplitude;
+        const translateX = Math.sin(loopedFrame * 0.04) * p.driftAmplitude;
+        const renderSize = p.baseSize * p.glowSize;
 
         return (
           <div
@@ -70,13 +73,14 @@ export const FloatingParticles: React.FC<FloatingParticlesProps> = ({
             style={{
               position: 'absolute',
               left: `${p.x}%`,
-              bottom: '10%',
-              width: p.size,
-              height: p.size,
+              bottom: '5%',
+              width: renderSize,
+              height: renderSize,
               borderRadius: '50%',
-              backgroundColor: color,
+              background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
               opacity,
               transform: `translate(${translateX}px, ${translateY}px)`,
+              filter: `blur(${p.baseSize * 0.2}px)`,
             }}
           />
         );

@@ -12,13 +12,13 @@ export const VIDEO = {
 
 // ─── Scene boundaries ───
 export const SCENES = {
-  scene1: { start: 0, end: 360 },      // 12s — Cold Open
-  scene2: { start: 360, end: 570 },     // 7s  — Transformation Bridge
-  scene3: { start: 570, end: 660 },     // 3s  — Title Card
-  scene4: { start: 660, end: 2010 },    // 45s — GCC Map
-  scene5: { start: 2010, end: 2850 },   // 28s — Team Culture
-  scene6: { start: 2850, end: 3510 },   // 22s — ExCom Reveal
-  scene7: { start: 3510, end: 4500 },   // 33s — Closing
+  scene1: { start: 0, end: 360 },
+  scene2: { start: 360, end: 570 },
+  scene3: { start: 570, end: 660 },
+  scene4: { start: 660, end: 2010 },
+  scene5: { start: 2010, end: 2850 },
+  scene6: { start: 2850, end: 3510 },
+  scene7: { start: 3510, end: 4500 },
 } as const;
 
 // ─── Scene 1: Cold Open ───
@@ -47,17 +47,16 @@ export const S2 = {
 
 // ─── Scene 3: Title ───
 export const S3 = {
-  titleAppear: 585,
+  titleAppear: 580,
+  underlineStart: 590,
   logoAppear: 600,
 } as const;
 
 // ─── Scene 4: GCC Map ───
 export const S4 = {
-  // Phase 4A: Map appears
   mapAppearStart: 660,
   mapAppearEnd: 750,
 
-  // Phase 4B: Country reveals
   countries: [
     { name: 'Saudi Arabia', code: 'KSA', flag: '🇸🇦', sob: 54, start: 750, pinDrop: 765, cardAppear: 780, duration: 150 },
     { name: 'UAE', code: 'UAE', flag: '🇦🇪', sob: 22, start: 900, pinDrop: 915, cardAppear: 930, duration: 120 },
@@ -67,24 +66,24 @@ export const S4 = {
     { name: 'Qatar', code: 'QAT', flag: '🇶🇦', sob: 2, start: 1380, pinDrop: 1395, cardAppear: 1410, duration: 90 },
   ],
 
-  // Phase 4C: Summary stats
+  cardsHideStart: 1470,
+  cardsHideDuration: 30,
+
   overlay1Start: 1560,
   overlay1End: 1710,
   overlay2Start: 1710,
   overlay2End: 1800,
 
-  // Phase 4D: Consumer mindset lines
   consumerLines: [
-    { text: 'Half the world\'s oil reserves.', start: 1830, end: 1905 },
-    { text: 'Family-centric. Influencer-driven.', start: 1905, end: 1980 },
-    { text: 'World\'s highest smartphone penetration.', start: 1980, end: 2010 },
+    { text: 'Half the world\'s oil reserves.', start: 1810, end: 1880 },
+    { text: 'Family-centric. Influencer-driven.', start: 1885, end: 1945 },
+    { text: 'World\'s highest smartphone penetration.', start: 1950, end: 2010 },
   ],
   mapDimStart: 1800,
 } as const;
 
 // ─── Scene 5: Team Culture ───
 export const S5 = {
-  // Phase 5A: Diversity Statement
   diversityStart: 2010,
   diversityLines: [
     { text: '17 Nationalities.', appear: 2025, emphasis: false },
@@ -94,7 +93,6 @@ export const S5 = {
   ],
   diversityEnd: 2190,
 
-  // Phase 5B: Culture Photo Montage
   montageStart: 2190,
   rounds: [
     { label: 'We Celebrate', start: 2190, end: 2370 },
@@ -103,7 +101,6 @@ export const S5 = {
   ],
   montageEnd: 2730,
 
-  // Phase 5C: ExCom Title
   excomTitleStart: 2730,
   excomTitleAppear: 2775,
   fadeToBlackStart: 2820,
@@ -112,7 +109,6 @@ export const S5 = {
 
 // ─── Scene 6: ExCom Reveal ───
 export const S6 = {
-  // Phase 6B: Irina Spotlight
   irinaStart: 2850,
   irinaPhotoAppear: 2865,
   irinaNameAppear: 2895,
@@ -120,14 +116,12 @@ export const S6 = {
   irinaNatAppear: 2925,
   irinaEnd: 3000,
 
-  // Phase 6C: Team Grid Cascade
   gridStart: 3000,
   irinaMorphDuration: 25,
   cascadeStart: 3040,
   cascadeStagger: 15,
   gridHoldEnd: 3300,
 
-  // Phase 6D: Stats Bar
   statsBarAppear: 3315,
   statsBarEnd: 3450,
   holdEnd: 3510,
@@ -135,7 +129,6 @@ export const S6 = {
 
 // ─── Scene 7: Closing ───
 export const S7 = {
-  // Phase 7A: World Map
   worldMapStart: 3510,
   pinCascadeStart: 3545,
   pinStagger: 9,
@@ -144,7 +137,6 @@ export const S7 = {
   mapTextAppear: 3780,
   worldMapEnd: 3960,
 
-  // Phase 7B: Brand Close
   brandCloseStart: 3960,
   closingTextAppear: 3975,
   fadeToWhiteStart: 4200,

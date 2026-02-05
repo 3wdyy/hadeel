@@ -1,5 +1,5 @@
 import React from 'react';
-import { useCurrentFrame, staticFile, interpolate } from 'remotion';
+import { useCurrentFrame, staticFile, interpolate, Img } from 'remotion';
 import { kenBurns, fadeIn } from '../config/animation';
 import type { KenBurnsType } from '../config/animation';
 import { FONT_FAMILY, COLORS } from '../config/brand';
@@ -21,7 +21,7 @@ const GRID_HEIGHT = 675;
 const CELL_GAP = 12;
 const CELL_WIDTH = (GRID_WIDTH - CELL_GAP) / 2;
 const CELL_HEIGHT = (GRID_HEIGHT - CELL_GAP) / 2;
-const CELL_RADIUS = 8;
+const CELL_RADIUS = 12;
 
 const DEFAULT_KB_TYPES: KenBurnsType[][] = [
   ['zoom_in', 'zoom_out', 'pan_right', 'zoom_in'],
@@ -35,7 +35,6 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
 }) => {
   const frame = useCurrentFrame();
 
-  // Find current and previous round
   let currentRoundIdx = -1;
   for (let i = rounds.length - 1; i >= 0; i--) {
     if (frame >= rounds[i].start) {
@@ -49,7 +48,6 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
   const currentRound = rounds[currentRoundIdx];
   const prevRound = currentRoundIdx > 0 ? rounds[currentRoundIdx - 1] : null;
 
-  // Crossfade duration
   const crossDur = 20;
   const crossProgress = interpolate(
     frame,
@@ -83,9 +81,11 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
           overflow: 'hidden',
           borderRadius: CELL_RADIUS,
           opacity,
+          border: '1px solid rgba(225, 0, 15, 0.15)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3)',
         }}
       >
-        <img
+        <Img
           src={staticFile(photoPath)}
           style={{
             width: '100%',
@@ -98,7 +98,6 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
     );
   };
 
-  // Label
   const labelOpacity = fadeIn(frame, currentRound.start + 5, 15);
 
   return (
@@ -110,7 +109,6 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
         transform: 'translate(-50%, -52%)',
       }}
     >
-      {/* Grid container */}
       <div
         style={{
           position: 'relative',
@@ -118,18 +116,15 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
           height: GRID_HEIGHT,
         }}
       >
-        {/* Previous round fading out */}
         {prevRound && crossProgress < 1 && prevRound.photos.map((p, i) =>
           renderCell(p, i, currentRoundIdx - 1, 1 - crossProgress)
         )}
-
-        {/* Current round fading in */}
         {currentRound.photos.map((p, i) =>
           renderCell(p, i, currentRoundIdx, currentRoundIdx === 0 ? fadeIn(frame, currentRound.start, 20) : crossProgress)
         )}
       </div>
 
-      {/* Label bar */}
+      {/* Label bar - glassmorphic pill */}
       <div
         style={{
           display: 'flex',
@@ -140,9 +135,13 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
       >
         <div
           style={{
-            backgroundColor: 'rgba(225, 0, 15, 0.85)',
-            padding: '8px 32px',
-            borderRadius: 20,
+            background: COLORS.glassBg,
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            padding: '10px 36px',
+            borderRadius: 24,
+            border: `1px solid rgba(225, 0, 15, 0.25)`,
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
           }}
         >
           <span
@@ -150,9 +149,9 @@ export const PhotoGrid: React.FC<PhotoGridProps> = ({
               fontFamily: FONT_FAMILY,
               fontSize: 28,
               fontWeight: 600,
-              color: COLORS.white,
+              color: COLORS.iceWhite,
               textTransform: 'uppercase',
-              letterSpacing: 1,
+              letterSpacing: 2,
             }}
           >
             {currentRound.label}

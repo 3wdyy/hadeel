@@ -1,7 +1,7 @@
 import React from 'react';
-import { useCurrentFrame, useVideoConfig, staticFile } from 'remotion';
+import { useCurrentFrame, useVideoConfig, staticFile, Img } from 'remotion';
 import { fadeIn, scaleIn } from '../config/animation';
-import { COLORS, FONT_FAMILY, SPACING } from '../config/brand';
+import { COLORS, FONT_FAMILY, SHADOWS } from '../config/brand';
 import type { ExComMember } from '../config/data';
 
 interface ExComCardProps {
@@ -30,9 +30,11 @@ export const ExComCard: React.FC<ExComCardProps> = ({
       style={{
         width,
         height,
-        backgroundColor: COLORS.henkelRed,
-        borderRadius: SPACING.cardRadius,
-        padding: SPACING.cardPadding,
+        background: COLORS.glassBg,
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderRadius: 16,
+        padding: 16,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -40,8 +42,24 @@ export const ExComCard: React.FC<ExComCardProps> = ({
         opacity,
         transform: `scale(${scale})`,
         overflow: 'hidden',
+        border: `1px solid rgba(225, 0, 15, 0.2)`,
+        boxShadow: `${SHADOWS.card}, ${SHADOWS.innerLight}`,
+        position: 'relative',
       }}
     >
+      {/* Red accent line at top */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: '20%',
+          right: '20%',
+          height: 2,
+          background: 'linear-gradient(90deg, transparent, #E1000F, transparent)',
+          borderRadius: '0 0 2px 2px',
+        }}
+      />
+
       {/* Headshot circle */}
       <div
         style={{
@@ -49,12 +67,13 @@ export const ExComCard: React.FC<ExComCardProps> = ({
           height: 56,
           borderRadius: '50%',
           overflow: 'hidden',
-          border: '2px solid rgba(255,255,255,0.3)',
+          border: `2px solid rgba(225, 0, 15, 0.4)`,
           marginTop: 4,
           flexShrink: 0,
+          boxShadow: SHADOWS.redGlow,
         }}
       >
-        <img
+        <Img
           src={staticFile(member.headshot)}
           style={{
             width: '100%',
@@ -68,9 +87,9 @@ export const ExComCard: React.FC<ExComCardProps> = ({
       <div
         style={{
           fontFamily: FONT_FAMILY,
-          fontSize: 22,
+          fontSize: 20,
           fontWeight: 700,
-          color: COLORS.white,
+          color: COLORS.iceWhite,
           letterSpacing: 0.3,
           marginTop: 8,
           textAlign: 'center',
@@ -84,9 +103,9 @@ export const ExComCard: React.FC<ExComCardProps> = ({
       <div
         style={{
           fontFamily: FONT_FAMILY,
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: 400,
-          color: 'rgba(255,255,255,0.85)',
+          color: COLORS.coolSilver,
           letterSpacing: 0.2,
           marginTop: 4,
           textAlign: 'center',
@@ -99,9 +118,9 @@ export const ExComCard: React.FC<ExComCardProps> = ({
       <div
         style={{
           fontFamily: FONT_FAMILY,
-          fontSize: 14,
+          fontSize: 13,
           fontWeight: 400,
-          color: 'rgba(255,255,255,0.7)',
+          color: COLORS.mutedText,
           letterSpacing: 0.3,
           marginTop: 4,
           textAlign: 'center',

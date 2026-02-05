@@ -1,9 +1,9 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame, useVideoConfig, staticFile, interpolate, Img } from 'remotion';
-import { COLORS, FONT_FAMILY, TYPOGRAPHY, SPACING } from '../config/brand';
+import { COLORS, FONT_FAMILY, TYPOGRAPHY, SPACING, GRADIENTS, SHADOWS } from '../config/brand';
 import { S6 } from '../config/timing';
 import { EXCOM_ROSTER, SCENE6D_TEXT } from '../config/data';
-import { fadeIn, scaleIn, slideUpIn, makeSpring } from '../config/animation';
+import { fadeIn, scaleIn, slideUpIn, makeSpring, driftingOrb } from '../config/animation';
 import { FloatingParticles } from '../components/FloatingParticles';
 import { ExComCard } from '../components/ExComCard';
 
@@ -14,52 +14,44 @@ export const Scene6_ExComReveal: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  const isSpotlightPhase = frame < S6.gridStart;
   const isGridPhase = frame >= S6.gridStart;
   const isStatsBarPhase = frame >= S6.statsBarAppear;
 
-  // ─── Background transition: dark to light ───
-  const bgTransition = isGridPhase
-    ? interpolate(frame, [S6.gridStart, S6.gridStart + 20], [0, 1], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
-      })
-    : 0;
+  // Background animated orb
+  const orb = driftingOrb(frame, 0.005, 10, 40, 50);
 
-  // ─── Phase 6B: Irina Spotlight ───
-  const irinaPhotoScale = scaleIn(frame, fps, S6.irinaPhotoAppear, 0.7, 'gentle');
-  const irinaPhotoOpacity = fadeIn(frame, S6.irinaPhotoAppear, 20);
-
-  // ─── Phase 6C: Irina morph to grid position ───
-  const morphProgress = isGridPhase
+  // ─── Spotlight → Grid crossfade ───
+  const transitionProgress = isGridPhase
     ? interpolate(
-        makeSpring(frame, fps, S6.gridStart, 'gentle'),
-        [0, 1], [0, 1]
+        makeSpring(frame, fps, S6.gridStart, 'cinematic'),
+        [0, 1], [0, 1],
       )
     : 0;
 
-  // Spotlight Irina dimensions
-  const spotlightPhotoSize = 220;
-  const gridPhotoSize = 56;
-  const irinaPhotoSize = interpolate(morphProgress, [0, 1], [spotlightPhotoSize, gridPhotoSize]);
+  // ─── Irina Spotlight ───
+  const irinaPhotoScale = scaleIn(frame, fps, S6.irinaPhotoAppear, 0.7, 'gentle');
+  const irinaPhotoOpacity = fadeIn(frame, S6.irinaPhotoAppear, 20);
 
-  // Grid layout constants
+  // Grid layout
   const gridWidth = 780;
   const gridHeight = 720;
   const cardWidth = 248;
   const cardHeight = 170;
   const gap = SPACING.cardGap;
 
-  // Calculate grid card positions
   const getCardPosition = (row: number, col: number) => {
     const gridLeft = (1920 - gridWidth) / 2;
     const gridTop = (1080 - gridHeight) / 2;
-    const x = gridLeft + (col - 1) * (cardWidth + gap);
-    const y = gridTop + (row - 1) * (cardHeight + gap);
-    return { x, y };
+    return {
+      x: gridLeft + (col - 1) * (cardWidth + gap),
+      y: gridTop + (row - 1) * (cardHeight + gap),
+    };
   };
 
-  // ─── Phase 6D: Stats bar ───
+  const gridContainerLeft = (1920 - gridWidth) / 2;
+  const gridContainerTop = (1080 - gridHeight) / 2;
+
+  // ─── Stats bar ───
   const statsBarTranslateY = isStatsBarPhase
     ? slideUpIn(frame, fps, S6.statsBarAppear, 60, 'gentle')
     : 60;
@@ -67,72 +59,52 @@ export const Scene6_ExComReveal: React.FC = () => {
 
   return (
     <AbsoluteFill>
-      {/* ── Background ── */}
-      <AbsoluteFill
+      {/* ── Dark cinematic background ── */}
+      <AbsoluteFill style={{
+        background: [
+          `radial-gradient(ellipse at ${orb.x}% ${orb.y}%, rgba(225, 0, 15, 0.04) 0%, transparent 50%)`,
+          GRADIENTS.cinematicWarm,
+        ].join(', '),
+      }} />
+
+      {/* Dark premium texture */}
+      <Img
+        src={staticFile('backgrounds/bg-dark-premium.png')}
         style={{
-          background: interpolate(bgTransition, [0, 1], [0, 1]) > 0.5
-            ? COLORS.lightGray
-            : 'transparent',
+          position: 'absolute', width: '100%', height: '100%',
+          objectFit: 'cover', opacity: 0.3,
         }}
       />
 
-      {/* Dark premium background (for spotlight) */}
-      {bgTransition < 1 && (
-        <AbsoluteFill
-          style={{
-            opacity: 1 - bgTransition,
-          }}
-        >
-          <Img
-            src={staticFile('backgrounds/bg-dark-premium.png')}
-            style={{ position: 'absolute', width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-          <FloatingParticles
-            count={9}
-            color={COLORS.warmGold}
-            maxOpacity={0.25}
-            startFrame={S6.irinaStart}
-            duration={S6.irinaEnd - S6.irinaStart}
-          />
-        </AbsoluteFill>
-      )}
+      <FloatingParticles
+        count={15}
+        color={COLORS.warmGold}
+        maxOpacity={0.2}
+        startFrame={S6.irinaStart}
+        duration={S6.holdEnd - S6.irinaStart}
+      />
 
-      {/* Light gray background for grid */}
-      {bgTransition > 0 && (
-        <AbsoluteFill
-          style={{
-            backgroundColor: COLORS.lightGray,
-            opacity: bgTransition,
-          }}
-        />
-      )}
+      <AbsoluteFill style={{ background: GRADIENTS.vignette, pointerEvents: 'none' }} />
 
-      {/* ── Irina Spotlight (morphs into grid position) ── */}
-      {!isGridPhase && frame >= S6.irinaPhotoAppear && (
-        <div
-          style={{
-            position: 'absolute',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            top: '35%',
-            transform: 'translateY(-50%)',
-          }}
-        >
+      {/* ── Irina Spotlight (crossfades out) ── */}
+      {frame >= S6.irinaPhotoAppear && transitionProgress < 1 && (
+        <div style={{
+          position: 'absolute', width: '100%',
+          display: 'flex', flexDirection: 'column', alignItems: 'center',
+          top: '35%', transform: 'translateY(-50%)',
+          opacity: 1 - transitionProgress,
+        }}>
           {/* Photo circle */}
-          <div
-            style={{
-              width: spotlightPhotoSize,
-              height: spotlightPhotoSize,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              border: '3px solid rgba(225, 0, 15, 0.6)',
-              opacity: irinaPhotoOpacity,
-              transform: `scale(${irinaPhotoScale})`,
-            }}
-          >
-            <img
+          <div style={{
+            width: 220, height: 220,
+            borderRadius: '50%',
+            overflow: 'hidden',
+            border: '3px solid rgba(225, 0, 15, 0.5)',
+            opacity: irinaPhotoOpacity,
+            transform: `scale(${irinaPhotoScale})`,
+            boxShadow: SHADOWS.redGlow,
+          }}>
+            <Img
               src={staticFile(irina.headshot)}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
@@ -140,21 +112,18 @@ export const Scene6_ExComReveal: React.FC = () => {
 
           {/* Name */}
           {frame >= S6.irinaNameAppear && (
-            <div
-              style={{
-                marginTop: 30,
-                opacity: fadeIn(frame, S6.irinaNameAppear, 15),
-                transform: `translateY(${slideUpIn(frame, fps, S6.irinaNameAppear, 20)}px)`,
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: FONT_FAMILY,
-                  fontSize: TYPOGRAPHY.irinaName.fontSize,
-                  fontWeight: TYPOGRAPHY.irinaName.fontWeight,
-                  color: COLORS.white,
-                }}
-              >
+            <div style={{
+              marginTop: 30,
+              opacity: fadeIn(frame, S6.irinaNameAppear, 15),
+              transform: `translateY(${slideUpIn(frame, fps, S6.irinaNameAppear, 20)}px)`,
+            }}>
+              <span style={{
+                fontFamily: FONT_FAMILY,
+                fontSize: TYPOGRAPHY.irinaName.fontSize,
+                fontWeight: TYPOGRAPHY.irinaName.fontWeight,
+                color: COLORS.iceWhite,
+                textShadow: '0 0 20px rgba(255, 255, 255, 0.1)',
+              }}>
                 {irina.name}
               </span>
             </div>
@@ -162,20 +131,13 @@ export const Scene6_ExComReveal: React.FC = () => {
 
           {/* Role */}
           {frame >= S6.irinaRoleAppear && (
-            <div
-              style={{
-                marginTop: 8,
-                opacity: fadeIn(frame, S6.irinaRoleAppear, 15),
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: FONT_FAMILY,
-                  fontSize: TYPOGRAPHY.irinaRole.fontSize,
-                  fontWeight: TYPOGRAPHY.irinaRole.fontWeight,
-                  color: COLORS.lightText,
-                }}
-              >
+            <div style={{ marginTop: 8, opacity: fadeIn(frame, S6.irinaRoleAppear, 15) }}>
+              <span style={{
+                fontFamily: FONT_FAMILY,
+                fontSize: TYPOGRAPHY.irinaRole.fontSize,
+                fontWeight: TYPOGRAPHY.irinaRole.fontWeight,
+                color: COLORS.coolSilver,
+              }}>
                 {irina.role}
               </span>
             </div>
@@ -183,20 +145,13 @@ export const Scene6_ExComReveal: React.FC = () => {
 
           {/* Nationality */}
           {frame >= S6.irinaNatAppear && (
-            <div
-              style={{
-                marginTop: 8,
-                opacity: fadeIn(frame, S6.irinaNatAppear, 15),
-              }}
-            >
-              <span
-                style={{
-                  fontFamily: FONT_FAMILY,
-                  fontSize: TYPOGRAPHY.irinaFlag.fontSize,
-                  fontWeight: TYPOGRAPHY.irinaFlag.fontWeight,
-                  color: COLORS.lightText,
-                }}
-              >
+            <div style={{ marginTop: 8, opacity: fadeIn(frame, S6.irinaNatAppear, 15) }}>
+              <span style={{
+                fontFamily: FONT_FAMILY,
+                fontSize: TYPOGRAPHY.irinaFlag.fontSize,
+                fontWeight: TYPOGRAPHY.irinaFlag.fontWeight,
+                color: COLORS.mutedText,
+              }}>
                 {irina.flag} {irina.nationality}
               </span>
             </div>
@@ -204,92 +159,59 @@ export const Scene6_ExComReveal: React.FC = () => {
         </div>
       )}
 
-      {/* ── Team Grid (Phase 6C) ── */}
+      {/* ── Team Grid (crossfades in) ── */}
       {isGridPhase && (
-        <div
-          style={{
+        <div style={{
+          position: 'absolute', top: '50%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: gridWidth, height: gridHeight,
+          opacity: transitionProgress,
+        }}>
+          {/* Irina's card */}
+          <div style={{
             position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: gridWidth,
-            height: gridHeight,
-          }}
-        >
-          {/* Irina's card at grid position */}
-          <div
-            style={{
-              position: 'absolute',
-              ...(() => {
-                const pos = getCardPosition(irina.gridRow, irina.gridCol);
-                const gridLeft = (1920 - gridWidth) / 2;
-                const gridTop = (1080 - gridHeight) / 2;
-                return { left: pos.x - gridLeft, top: pos.y - gridTop };
-              })(),
-            }}
-          >
-            <ExComCard
-              member={irina}
-              appearFrame={S6.gridStart}
-              width={cardWidth}
-              height={cardHeight}
-            />
+            left: getCardPosition(irina.gridRow, irina.gridCol).x - gridContainerLeft,
+            top: getCardPosition(irina.gridRow, irina.gridCol).y - gridContainerTop,
+          }}>
+            <ExComCard member={irina} appearFrame={S6.gridStart} width={cardWidth} height={cardHeight} />
           </div>
 
-          {/* Remaining 11 team members */}
+          {/* Team cascade */}
           {teamMembers.map((member) => {
             const appearFrame = S6.cascadeStart + (member.revealOrder - 1) * S6.cascadeStagger;
             const pos = getCardPosition(member.gridRow, member.gridCol);
-            const gridLeft = (1920 - gridWidth) / 2;
-            const gridTop = (1080 - gridHeight) / 2;
-
             return (
-              <div
-                key={member.name}
-                style={{
-                  position: 'absolute',
-                  left: pos.x - gridLeft,
-                  top: pos.y - gridTop,
-                }}
-              >
-                <ExComCard
-                  member={member}
-                  appearFrame={appearFrame}
-                  width={cardWidth}
-                  height={cardHeight}
-                />
+              <div key={member.name} style={{
+                position: 'absolute',
+                left: pos.x - gridContainerLeft,
+                top: pos.y - gridContainerTop,
+              }}>
+                <ExComCard member={member} appearFrame={appearFrame} width={cardWidth} height={cardHeight} />
               </div>
             );
           })}
         </div>
       )}
 
-      {/* ── Phase 6D: Cross Functional Team bar ── */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 24,
-          left: 0,
-          right: 0,
-          height: 56,
-          backgroundColor: 'rgba(51,51,51,0.85)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: statsBarOpacity,
-          transform: `translateY(${statsBarTranslateY}px)`,
-        }}
-      >
-        <span
-          style={{
-            fontFamily: FONT_FAMILY,
-            fontSize: TYPOGRAPHY.statsBar.fontSize,
-            fontWeight: TYPOGRAPHY.statsBar.fontWeight,
-            color: COLORS.white,
-            textTransform: 'uppercase',
-            letterSpacing: TYPOGRAPHY.statsBar.letterSpacing,
-          }}
-        >
+      {/* ── Stats bar (glassmorphic) ── */}
+      <div style={{
+        position: 'absolute', bottom: 24, left: 0, right: 0, height: 56,
+        background: COLORS.glassBg,
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
+        borderTop: `1px solid ${COLORS.glassBorder}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        opacity: statsBarOpacity,
+        transform: `translateY(${statsBarTranslateY}px)`,
+      }}>
+        <span style={{
+          fontFamily: FONT_FAMILY,
+          fontSize: TYPOGRAPHY.statsBar.fontSize,
+          fontWeight: TYPOGRAPHY.statsBar.fontWeight,
+          color: COLORS.iceWhite,
+          textTransform: 'uppercase',
+          letterSpacing: TYPOGRAPHY.statsBar.letterSpacing,
+        }}>
           {SCENE6D_TEXT}
         </span>
       </div>
