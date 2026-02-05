@@ -2,9 +2,9 @@ import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { fadeIn, counterAnimate } from '../config/animation';
 import { FONT_FAMILY, COLORS } from '../config/brand';
+import { FlagIcon } from './FlagIcon';
 
 interface MapInfoCardProps {
-  flag: string;
   country: string;
   sobPercent: number;
   appearFrame: number;
@@ -14,7 +14,6 @@ interface MapInfoCardProps {
 }
 
 export const MapInfoCard: React.FC<MapInfoCardProps> = ({
-  flag,
   country,
   sobPercent,
   appearFrame,
@@ -66,7 +65,7 @@ export const MapInfoCard: React.FC<MapInfoCardProps> = ({
           }}
         />
 
-        <span style={{ fontSize: 24 }}>{flag}</span>
+        <FlagIcon country={country} width={30} height={20} />
 
         <div>
           <div

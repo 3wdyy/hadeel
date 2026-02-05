@@ -3,6 +3,7 @@ import { useCurrentFrame, useVideoConfig, staticFile } from 'remotion';
 import { fadeIn, scaleIn } from '../config/animation';
 import { COLORS, FONT_FAMILY, SPACING } from '../config/brand';
 import type { ExComMember } from '../config/data';
+import { FlagIcon } from './FlagIcon';
 
 interface ExComCardProps {
   member: ExComMember;
@@ -105,9 +106,14 @@ export const ExComCard: React.FC<ExComCardProps> = ({
           letterSpacing: 0.3,
           marginTop: 4,
           textAlign: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 6,
         }}
       >
-        {member.flag} {member.nationality}
+        <FlagIcon country={member.nationality} width={20} height={14} />
+        <span>{member.nationality}</span>
       </div>
     </div>
   );

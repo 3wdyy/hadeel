@@ -4,7 +4,7 @@ import { COLORS, FONT_FAMILY, TYPOGRAPHY } from '../config/brand';
 import { S4, SCENES } from '../config/timing';
 import { SUMMARY_OVERLAY_1, SUMMARY_OVERLAY_2 } from '../config/data';
 import { fadeIn, fadeOut, scaleIn, makeSpring, counterAnimate } from '../config/animation';
-import { GCCMap, GCC_PATHS } from '../components/GCCMap';
+import { GCCMap } from '../components/GCCMap';
 import { MapInfoCard } from '../components/MapInfoCard';
 import { CounterNumber } from '../components/CounterNumber';
 
@@ -105,7 +105,6 @@ export const Scene4_GCCMap: React.FC = () => {
           return (
             <MapInfoCard
               key={country.code}
-              flag={country.flag}
               country={country.name}
               sobPercent={country.sob}
               appearFrame={country.cardAppear}

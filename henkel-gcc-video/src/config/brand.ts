@@ -21,7 +21,7 @@ export const COLORS = {
   lightGray: '#F2F2F2',
 } as const;
 
-export const FONT_FAMILY = 'Inter, "Segoe UI", system-ui, -apple-system, sans-serif';
+export const FONT_FAMILY = 'Inter, system-ui, -apple-system, sans-serif';
 
 export const TYPOGRAPHY = {
   hero: {

@@ -59,12 +59,12 @@ export const S4 = {
 
   // Phase 4B: Country reveals
   countries: [
-    { name: 'Saudi Arabia', code: 'KSA', flag: '🇸🇦', sob: 54, start: 750, pinDrop: 765, cardAppear: 780, duration: 150 },
-    { name: 'UAE', code: 'UAE', flag: '🇦🇪', sob: 22, start: 900, pinDrop: 915, cardAppear: 930, duration: 120 },
-    { name: 'Kuwait', code: 'KWT', flag: '🇰🇼', sob: 13, start: 1020, pinDrop: 1035, cardAppear: 1050, duration: 120 },
-    { name: 'Oman', code: 'OMN', flag: '🇴🇲', sob: 6, start: 1140, pinDrop: 1155, cardAppear: 1170, duration: 90 },
-    { name: 'Bahrain', code: 'BHR', flag: '🇧🇭', sob: 3, start: 1260, pinDrop: 1275, cardAppear: 1290, duration: 90 },
-    { name: 'Qatar', code: 'QAT', flag: '🇶🇦', sob: 2, start: 1380, pinDrop: 1395, cardAppear: 1410, duration: 90 },
+    { name: 'Saudi Arabia', code: 'KSA', sob: 54, start: 750, pinDrop: 765, cardAppear: 780, duration: 150 },
+    { name: 'UAE', code: 'UAE', sob: 22, start: 900, pinDrop: 915, cardAppear: 930, duration: 120 },
+    { name: 'Kuwait', code: 'KWT', sob: 13, start: 1020, pinDrop: 1035, cardAppear: 1050, duration: 120 },
+    { name: 'Oman', code: 'OMN', sob: 6, start: 1140, pinDrop: 1155, cardAppear: 1170, duration: 90 },
+    { name: 'Bahrain', code: 'BHR', sob: 3, start: 1260, pinDrop: 1275, cardAppear: 1290, duration: 90 },
+    { name: 'Qatar', code: 'QAT', sob: 2, start: 1380, pinDrop: 1395, cardAppear: 1410, duration: 90 },
   ],
 
   // Phase 4C: Summary stats

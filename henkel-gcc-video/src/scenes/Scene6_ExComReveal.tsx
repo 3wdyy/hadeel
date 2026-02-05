@@ -6,6 +6,7 @@ import { EXCOM_ROSTER, SCENE6D_TEXT } from '../config/data';
 import { fadeIn, scaleIn, slideUpIn, makeSpring } from '../config/animation';
 import { FloatingParticles } from '../components/FloatingParticles';
 import { ExComCard } from '../components/ExComCard';
+import { FlagIcon } from '../components/FlagIcon';
 
 const irina = EXCOM_ROSTER[0];
 const teamMembers = EXCOM_ROSTER.filter(m => !m.spotlight);
@@ -195,9 +196,14 @@ export const Scene6_ExComReveal: React.FC = () => {
                   fontSize: TYPOGRAPHY.irinaFlag.fontSize,
                   fontWeight: TYPOGRAPHY.irinaFlag.fontWeight,
                   color: COLORS.lightText,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
                 }}
               >
-                {irina.flag} {irina.nationality}
+                <FlagIcon country={irina.nationality} width={26} height={18} />
+                {irina.nationality}
               </span>
             </div>
           )}
